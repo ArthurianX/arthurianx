@@ -183,9 +183,10 @@ export class DialSceneComponent implements OnInit {
 
       this.dialsLoaded = true;
 
-      /*// Wait the for the
-      this.init();
-      this.initSound(resources);*/
+      setTimeout(() => {
+        this.init();
+        this.initSound(resources);
+      }, 5000);
     });
   }
 
