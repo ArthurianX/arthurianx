@@ -42,6 +42,19 @@ export class AppComponent implements OnInit {
     }
   }
 
+  public dialAnimationComplete(status) {
+      // TODO: Also add logic here so it doesn't play every time the user visits the site
+      // console.log('dial animation complete');
+  }
+
+  public receiveDialSpeed(speed) {
+    /**
+     * This will be the global speed multiplier for all the other looped animations.
+     * */
+
+    // console.log('dialSpeed', speed);
+  }
+
 }
 
 /**

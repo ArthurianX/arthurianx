@@ -1,0 +1,24 @@
+<div class="main-dial-animation"
+     id="main-dial-animation"
+     fxFill fxLayout="row"
+     fxLayoutAlign="center center">
+
+  <lottie-animation-view
+    #_d
+    [ngStyle]="{'position': styleConfig.position, 'left': styleConfig.left, 'margin-left': styleConfig.marginLeft}"
+    [width]="500" [height]="500"
+    [options]="lottieConfig"
+    (animCreated)="handleAnimationLoaded($event)">
+  </lottie-animation-view>
+
+  <!--<div id="player">
+    <p>Speed: x{{animationSpeed}}</p>
+    <div class="range-container">
+      <input #range type="range" value="1" min="0" max="3" step="0.5"
+             (change)="setSpeed(range.value)">
+    </div>
+    <button (click)="stop()">stop</button>
+    <button (click)="pause()">pause</button>
+    <button (click)="play()">play</button>
+  </div>-->
+</div>

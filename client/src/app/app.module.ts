@@ -40,6 +40,7 @@ import '../styles/headings.css';
 import { RotatingDialComponent } from './rotating-dial/rotating-dial.component';
 import { DialSceneComponent } from './rotating-dial/dial-scene.component';
 import { LoadingAnimationComponent } from './logo-animation/logo-animation.component';
+import { DialAnimationComponent } from './dial-animation/dial-animation.component';
 
 // Application wide providers
 const APP_PROVIDERS = [
@@ -61,6 +62,7 @@ interface StoreType {
   declarations: [
     AppComponent,
     LoadingAnimationComponent,
+    DialAnimationComponent,
     DialSceneComponent,
     RotatingDialComponent,
     AboutComponent,
