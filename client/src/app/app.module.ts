@@ -41,6 +41,7 @@ import { RotatingDialComponent } from './rotating-dial/rotating-dial.component';
 import { DialSceneComponent } from './rotating-dial/dial-scene.component';
 import { LoadingAnimationComponent } from './logo-animation/logo-animation.component';
 import { DialAnimationComponent } from './dial-animation/dial-animation.component';
+import { UnderConstructionComponent } from './under-construction/under-construction.component';
 
 // Application wide providers
 const APP_PROVIDERS = [
@@ -62,6 +63,7 @@ interface StoreType {
   declarations: [
     AppComponent,
     LoadingAnimationComponent,
+    UnderConstructionComponent,
     DialAnimationComponent,
     DialSceneComponent,
     RotatingDialComponent,

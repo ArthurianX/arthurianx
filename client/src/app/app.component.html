@@ -32,7 +32,9 @@
 
   <logo-animation *ngIf="!logoIntroComplete" (animComplete)="logoAnimationComplete($event)"></logo-animation>
   <dial-animation *ngIf="logoIntroComplete" (animComplete)="dialAnimationComplete($event)" (dialSpeed)="receiveDialSpeed($event)"></dial-animation>
+  <under-construction *ngIf="dialIntroComplete" [animationSpeed]="globalSpeed"></under-construction>
 
+  <!--<under-construction [animationSpeed]="globalSpeed"></under-construction>-->
   <!--<rotating-dial *ngIf="logoIntroComplete"></rotating-dial>-->
 
   <main>

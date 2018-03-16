@@ -25,14 +25,16 @@ export class AppComponent implements OnInit {
 
   public showDevModule: boolean = environment.showDevModule;
 
+  public globalSpeed: number = 0;
   public logoIntroComplete: boolean = false;
+  public dialIntroComplete: boolean = false;
 
   constructor(
     public appState: AppState
   ) {}
 
   public ngOnInit() {
-    console.log('Initial App State', this.appState.state);
+    // console.log('Initial App State', this.appState.state);
   }
 
   public logoAnimationComplete(status) {
@@ -43,8 +45,9 @@ export class AppComponent implements OnInit {
   }
 
   public dialAnimationComplete(status) {
-      // TODO: Also add logic here so it doesn't play every time the user visits the site
-      // console.log('dial animation complete');
+    // TODO: Also add logic here so it doesn't play every time the user visits the site
+    console.log('dial animation complete');
+    this.dialIntroComplete = true;
   }
 
   public receiveDialSpeed(speed) {
@@ -53,6 +56,7 @@ export class AppComponent implements OnInit {
      * */
 
     // console.log('dialSpeed', speed);
+    this.globalSpeed = speed;
   }
 
 }

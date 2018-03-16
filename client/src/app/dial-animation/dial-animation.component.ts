@@ -49,6 +49,9 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
     lastDeltaY: 0
   };
 
+  public github = 'assets/svg/github.svg';
+  public linkedin = 'assets/svg/linkedin.svg';
+
   private anim: any;
   private animationSpeed: number = 1;
 
@@ -87,12 +90,12 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
 
       if (this.anim.firstFrame === 0) {
         this.setDialInPlace();
-        // this.animComplete.emit(true);
         this.anim.playSegments([50, 89], true);
       } else if (this.anim.firstFrame === 50) {
         this.anim.loop = true;
         this.anim.playSegments([89, 141], true);
         this.setSpeedBasedOnScroll();
+        this.animComplete.emit(true);
       }
     });
   }
