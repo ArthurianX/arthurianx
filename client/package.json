@@ -84,6 +84,7 @@
     "webpack": "node --max_old_space_size=4096 node_modules/webpack/bin/webpack.js"
   },
   "dependencies": {
+    "@angular-devkit/build-optimizer": "^0.4.5",
     "@angular/animations": "^5.2.6",
     "@angular/common": "^5.2.6",
     "@angular/compiler": "^5.2.6",
@@ -116,6 +117,7 @@
     "@angular/cli": "^1.7.1",
     "@angular/compiler-cli": "^5.2.6",
     "@angular/language-service": "^5.2.0",
+    "@angular-devkit/build-optimizer": "latest",
     "@compodoc/compodoc": "^1.0.7",
     "@ngtools/webpack": "1.10.0",
     "@types/hammerjs": "^2.0.35",
