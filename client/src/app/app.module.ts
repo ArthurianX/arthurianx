@@ -6,11 +6,8 @@ import { RouterModule, PreloadAllModules } from '@angular/router';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FlexLayoutModule } from '@angular/flex-layout';
 
-
 import { LottieAnimationViewModule } from 'ng-lottie';
 import { PixiModule } from 'angular2pixi/dist/es/index';
-import 'pixi-svg/dist/pixi-svg';
-import 'pixi-sound/dist/pixi-sound.es';
 
 import { StoreModule } from '@ngrx/store';
 import { EffectsModule } from '@ngrx/effects';

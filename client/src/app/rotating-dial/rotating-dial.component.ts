@@ -3,6 +3,9 @@ import {
   OnInit, ViewChild, ViewEncapsulation
 } from '@angular/core';
 
+import 'pixi-svg/dist/pixi-svg';
+import 'pixi-sound/dist/pixi-sound.es';
+
 import { AppState } from '../app.service';
 
 @Component({

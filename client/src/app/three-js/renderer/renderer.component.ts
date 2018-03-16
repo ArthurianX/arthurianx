@@ -1,5 +1,8 @@
 import { Component, OnInit, ViewChild, ElementRef, ContentChildren, HostListener, QueryList, EventEmitter, Output, AfterViewInit } from '@angular/core';
 import * as THREE from 'three';
+// Import THREE.terrain here.
+import 'three.terrain.js/build/THREE.Terrain.min';
+
 import { AbstractCamera } from '../cameras';
 import { SceneDirective } from '../objects/scene.directive';
 

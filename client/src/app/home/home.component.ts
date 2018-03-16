@@ -1,5 +1,5 @@
 import {
-  Component,
+  Component, NgZone,
   OnInit
 } from '@angular/core';
 
@@ -44,7 +44,8 @@ export class HomeComponent implements OnInit {
 
   constructor(
     public appState: AppState,
-    public title: Title
+    public title: Title,
+    public ngZone: NgZone
   ) {
 
     this.lottieConfig = {
@@ -60,6 +61,13 @@ export class HomeComponent implements OnInit {
     /**
      * this.title.getData().subscribe(data => this.data = data);
      */
+
+    this.ngZone.runOutsideAngular(() => {
+
+      this.hookDetector();
+      this.hookAnimationFrame();
+
+    });
   }
 
   public submitState(value: string) {
@@ -87,5 +95,17 @@ export class HomeComponent implements OnInit {
   public setSpeed(speed: number) {
     this.animationSpeed = speed;
     this.anim.setSpeed(speed);
+  }
+
+  public hookAnimationFrame() {
+
+
+
+  }
+
+  public hookDetector() {
+
+
+
   }
 }
