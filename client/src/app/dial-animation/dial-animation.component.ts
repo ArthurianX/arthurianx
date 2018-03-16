@@ -50,7 +50,7 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
   };
 
   public github = 'assets/svg/github.svg';
-  public linkedin = 'assets/svg/linkedin.svg';
+  public linkedin = 'assets/svg/likdicon.svg';
 
   private anim: any;
   private animationSpeed: number = 1;
