@@ -42,6 +42,7 @@ import { DialSceneComponent } from './rotating-dial/dial-scene.component';
 import { LoadingAnimationComponent } from './logo-animation/logo-animation.component';
 import { DialAnimationComponent } from './dial-animation/dial-animation.component';
 import { UnderConstructionComponent } from './under-construction/under-construction.component';
+import { ThreeJsModule } from './three-js/three-js.module';
 
 // Application wide providers
 const APP_PROVIDERS = [
@@ -83,6 +84,7 @@ interface StoreType {
     HttpClientModule,
     LottieAnimationViewModule.forRoot(),
     PixiModule,
+    ThreeJsModule,
     RouterModule.forRoot(ROUTES, {
       useHash: Boolean(history.pushState) === false,
       preloadingStrategy: PreloadAllModules

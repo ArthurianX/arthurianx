@@ -35,8 +35,9 @@ export class UnderConstructionComponent implements OnInit, OnDestroy, OnChanges 
   public ngOnChanges(changes: SimpleChanges) {
     if (changes.animationSpeed.currentValue !== 0) {
       // console.log('Animation speed changed to', changes.animationSpeed.currentValue);
-      this.anim.setSpeed(changes.animationSpeed.currentValue);
-
+      if (this.anim) {
+        this.anim.setSpeed(changes.animationSpeed.currentValue);
+      }
     }
   }
 

@@ -365,8 +365,7 @@ export class DialSceneComponent implements OnInit {
         rotation: currentAnimation.rotation,
         repeat: 500,
         yoyo: currentAnimation.yoyo,
-        ease: currentAnimation.ease, //Sine.easeInOut,
-        onComplete: (event) => {console.log('do stuff', event)}
+        ease: currentAnimation.ease, //Sine.easeInOut
       });
 
       i++;
