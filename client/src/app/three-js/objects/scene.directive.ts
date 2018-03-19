@@ -8,9 +8,12 @@ import { AbstractObject3D } from './abstract-object-3d';
 })
 export class SceneDirective extends AbstractObject3D<THREE.Scene> {
 
+  @Input() public fog: THREE.Fog = new THREE.Fog(0x050505, 1, 1000);
+  public createdScene: any;
+
   constructor() {
-    console.log("SceneDirective.constructor");
     super();
+    console.log("SceneDirective.constructor");
   }
 
   protected afterInit(): void {
@@ -19,7 +22,11 @@ export class SceneDirective extends AbstractObject3D<THREE.Scene> {
 
   protected newObject3DInstance(): THREE.Scene {
     console.log("SceneDirective.newObject3DInstance");
-    return new THREE.Scene();
+    this.createdScene = new THREE.Scene();
+    this.createdScene.fog = this.fog;
+
+    console.info('SCENEEE', this.createdScene);
+    return this.createdScene;
   }
 
 }

@@ -143,7 +143,7 @@
 
     <three-perspective-camera [fov]=60 [near]=1 [far]=1100 positionX=20 positionY=50 positionZ=50></three-perspective-camera>
 
-    <three-scene>
+    <three-scene [fog]="sceneFog">
       <three-axes-helper size=200></three-axes-helper>
       <three-grid-helper size=100 divisions=10></three-grid-helper>
 

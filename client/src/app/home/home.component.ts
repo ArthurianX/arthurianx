@@ -1,7 +1,9 @@
 import {
-  Component, NgZone,
-  OnInit
+  Component, ElementRef, NgZone,
+  OnInit, ViewChild
 } from '@angular/core';
+
+import * as THREE from 'three';
 
 import { AppState } from '../app.service';
 import { Title } from './title';
@@ -40,8 +42,7 @@ export class HomeComponent implements OnInit {
    */
 
   public lottieConfig: {};
-  private anim: any;
-  private animationSpeed: number = 1;
+  public sceneFog: THREE.Fog = new THREE.Fog(0x050505, 1, 1000);
 
   constructor(
     public appState: AppState,
@@ -50,12 +51,6 @@ export class HomeComponent implements OnInit {
     public calendar: CalendarConnector
   ) {
 
-    this.lottieConfig = {
-      path: 'assets/animations/logo.json',
-      autoplay: true,
-      loop: true
-    };
-
     calendar.getEvents().subscribe( (result) => {
       console.log('calendar event', result);
     });
@@ -63,17 +58,18 @@ export class HomeComponent implements OnInit {
   }
 
   public ngOnInit() {
-    console.log('hello `Home` component');
     /**
      * this.title.getData().subscribe(data => this.data = data);
      */
 
-    this.ngZone.runOutsideAngular(() => {
+    this.initialSceneSettings();
+
+    /*this.ngZone.runOutsideAngular(() => {
 
       this.hookDetector();
       this.hookAnimationFrame();
 
-    });
+    });*/
   }
 
   public submitState(value: string) {
@@ -82,36 +78,11 @@ export class HomeComponent implements OnInit {
     this.localState.value = '';
   }
 
-  public handleAnimation(anim: any) {
-    this.anim = anim;
-  }
+  public initialSceneSettings() {
 
-  public stop() {
-    this.anim.stop();
-  }
-
-  public play() {
-    this.anim.play();
-  }
-
-  public pause() {
-    this.anim.pause();
-  }
-
-  public setSpeed(speed: number) {
-    this.animationSpeed = speed;
-    this.anim.setSpeed(speed);
-  }
-
-  public hookAnimationFrame() {
-
-
-
-  }
-
-  public hookDetector() {
-
-
+    // Set Scene Fog
+    this.sceneFog = new THREE.Fog( 0x050505, 2000, 4000 );
+    this.sceneFog.color.setHSL( 0.102, 0.9, 0.825 );
 
   }
 }
