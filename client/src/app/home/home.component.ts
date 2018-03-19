@@ -6,6 +6,7 @@ import {
 import { AppState } from '../app.service';
 import { Title } from './title';
 import { XLargeDirective } from './x-large';
+import { CalendarConnector } from './home.service';
 
 @Component({
   /**
@@ -18,7 +19,7 @@ import { XLargeDirective } from './x-large';
    * We need to tell Angular's Dependency Injection which providers are in our app.
    */
   providers: [
-    Title
+    Title, CalendarConnector
   ],
   /**
    * Our list of styles in our component. We may add more to compose many styles together.
@@ -45,7 +46,8 @@ export class HomeComponent implements OnInit {
   constructor(
     public appState: AppState,
     public title: Title,
-    public ngZone: NgZone
+    public ngZone: NgZone,
+    public calendar: CalendarConnector
   ) {
 
     this.lottieConfig = {
@@ -53,6 +55,10 @@ export class HomeComponent implements OnInit {
       autoplay: true,
       loop: true
     };
+
+    calendar.getEvents().subscribe( (result) => {
+      console.log('calendar event', result);
+    });
 
   }
 
