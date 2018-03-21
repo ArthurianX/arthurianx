@@ -1,4 +1,4 @@
-import { Directive, AfterViewInit, Input, forwardRef } from '@angular/core';
+import { Directive, AfterViewInit, Input, forwardRef, EventEmitter, Output } from '@angular/core';
 import * as THREE from 'three';
 import { AbstractObject3D } from './abstract-object-3d';
 
@@ -9,6 +9,7 @@ import { AbstractObject3D } from './abstract-object-3d';
 export class SceneDirective extends AbstractObject3D<THREE.Scene> {
 
   @Input() public fog: THREE.Fog = new THREE.Fog(0x050505, 1, 1000);
+  @Output() public cheapScene = new EventEmitter();
   public createdScene: any;
 
   constructor() {
@@ -25,7 +26,9 @@ export class SceneDirective extends AbstractObject3D<THREE.Scene> {
     this.createdScene = new THREE.Scene();
     this.createdScene.fog = this.fog;
 
-    console.info('SCENEEE', this.createdScene);
+    // TODO: We should avoid this further. Create directives which add to scene,
+    // don't just expose the scene and add stuff to it inside the home component.
+    this.cheapScene.emit(this.createdScene);
     return this.createdScene;
   }
 

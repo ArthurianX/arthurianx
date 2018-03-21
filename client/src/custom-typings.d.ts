@@ -504,3 +504,39 @@ declare namespace PIXI.sound {
 declare module "pixi-sound" {
   export = PIXI.sound;
 }
+
+declare namespace THREE.Terrain {
+
+}
+
+declare namespace THREE.ShaderExtras {
+
+}
+
+declare namespace THREE.DotScreenPass {
+
+}
+
+declare namespace THREE.EffectComposer.quad {
+
+}
+
+declare namespace THREE.EffectComposer.scene {
+
+}
+
+declare namespace THREE.EffectComposer.camera {
+
+}
+
+declare namespace THREE.BleachBypassShader.camera {
+
+}
+
+declare namespace THREE.HorizontalTiltShiftShader.camera {
+
+}
+
+declare namespace THREE.VerticalTiltShiftShader.camera {
+
+}
