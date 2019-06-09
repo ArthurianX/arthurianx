@@ -8,7 +8,7 @@ import {
  * see https://github.com/gdi2290/es6-promise-loader for more info
  */
 
-console.log('`ChildDetail` component loaded asynchronously');
+// console.log('`ChildDetail` component loaded asynchronously');
 
 @Component({
   selector: 'child-detail',

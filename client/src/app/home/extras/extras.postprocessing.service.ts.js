@@ -10,7 +10,7 @@ import 'three/examples/js/shaders/BleachBypassShader';
 import 'three/examples/js/shaders/HorizontalTiltShiftShader';
 import 'three/examples/js/shaders/VerticalTiltShiftShader';
 
-@Injectable()
+@Injectable();
 export class ComposeRenderer {
 
   constructor() {}

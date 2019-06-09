@@ -34,8 +34,8 @@
       </three-collada-loader>
 
 
-      <div *ngFor="let z of [-10, -5, 0, 5, 10]">
-        <three-object-loader *ngFor="let x of [0,5,10,15,20]" model="assets/model/Server.json" [translateX]="x" [translateZ]="z"
+      <div *ngFor="let z of locationMovement.z">
+        <three-object-loader *ngFor="let x of locationMovement.x" model="assets/model/Server.json" [translateX]="x" [translateZ]="z"
                              [renderer]="mainRenderer">
         </three-object-loader>
       </div>
