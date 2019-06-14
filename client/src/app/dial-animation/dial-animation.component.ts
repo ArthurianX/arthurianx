@@ -142,9 +142,9 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
 
       // increase or decrease based on scroll direction.
       if (this.styleConfig.lastDeltaY > 0) {
-        this.setDialSpeed(this.styleConfig.speed + 0.5);
+        this.setDialSpeed(this.styleConfig.speed + 1);
       } else {
-        this.setDialSpeed(this.styleConfig.speed - 0.5);
+        this.setDialSpeed(this.styleConfig.speed - 1);
       }
     };
 

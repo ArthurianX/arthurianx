@@ -1,0 +1,33 @@
+@keyframes show-intro {
+  0% {
+    opacity: 0;
+  }
+
+  30%, 80% {
+    opacity: 1;
+  }
+
+  100% {
+    opacity: 0;
+  }
+}
+
+:host {
+
+  .main-logo-animation {
+
+    .intro-text {
+      opacity: 0;
+      position: absolute;
+      top: 10%;
+      animation:         show-intro 4s 1 forwards ease-in 1s; /* IE 10+, Fx 29+ */
+      h1 {
+        color: #fff
+      }
+    }
+
+  }
+
+}
+
+
