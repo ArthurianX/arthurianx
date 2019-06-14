@@ -13,6 +13,7 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { LoadingAnimationComponent } from './components/logo-animation';
 import { DialAnimationComponent } from './components/dial-animation';
+import { EnvironmentComponent } from './components/environment/environment.component';
 
 @NgModule({
   declarations: [
@@ -21,7 +22,8 @@ import { DialAnimationComponent } from './components/dial-animation';
     NoContentComponent,
     AppComponent,
     StoryComponent,
-    IntroComponent
+    IntroComponent,
+    EnvironmentComponent
   ],
   imports: [
     BrowserModule,

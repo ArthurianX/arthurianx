@@ -17,6 +17,16 @@
     "lib": [
       "es2018",
       "dom"
-    ]
+    ],
+    "paths": {
+      "ngxpixi": [
+        "dist/ngxpixi"
+      ],
+      "ngxpixi/*": [
+        "dist/ngxpixi/*"
+      ],
+      "pixi.js": ["node_modules/pixi.js"],
+      "pixi.js/*": ["node_modules/pixi.js/*"]
+    }
   }
 }
