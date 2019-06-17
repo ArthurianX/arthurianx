@@ -1,8 +1,8 @@
 import { NgModule } from '@angular/core';
 import { Routes, RouterModule } from '@angular/router';
-import {IntroComponent} from "./containers/intro/intro.component";
-import {NoContentComponent} from "./components/no-content";
-import {StoryComponent} from "./containers/story/story.component";
+import {IntroComponent} from './containers/intro/intro.component';
+import {NoContentComponent} from './components/no-content';
+import {StoryComponent} from './containers/story/story.component';
 
 const routes: Routes = [
   { path: '', pathMatch: 'full', component: IntroComponent, data: {animation: 'Intro'} },

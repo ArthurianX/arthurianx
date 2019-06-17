@@ -8,8 +8,8 @@ import 'pixi-viewport';
 
 import { PixiService, AssetService } from 'ngxpixi';
 import GraphicsSVG from '../../services/pixi-svg/SVG';
-
 const svgLoader = GraphicsSVG;
+
 
 @Component({
   selector: 'app-environment',
@@ -38,6 +38,7 @@ export class EnvironmentComponent implements AfterViewInit {
   private innerHeight: number;
   private stage: PIXI.Container;
 
+
   @HostListener('window:resize', ['$event'])
   public onResize(event) {
     this.innerWidth = window.innerWidth;
@@ -52,11 +53,11 @@ export class EnvironmentComponent implements AfterViewInit {
     this.innerWidth = window.innerWidth;
     this.innerHeight = window.innerHeight;
     // console.log(new svgLoader());
-    console.log('pixi service', pixi);
-    console.log('assets service', assets);
+
   }
 
   ngAfterViewInit() {
+
     this.pixi.init(
       this.innerWidth,
       this.innerHeight,
@@ -64,6 +65,12 @@ export class EnvironmentComponent implements AfterViewInit {
       true,
       window
     );
+
+    const app = this.pixi.app;
+    if ((app.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
+      console.log('Atlas Parser not present');
+      app.loader.use(PIXI.spine.AtlasParser.use);
+    }
 
     this.initWorld();
   }
@@ -81,8 +88,74 @@ export class EnvironmentComponent implements AfterViewInit {
 
     this.loadAssets();
 
+    this.addTicker();
+  }
+
+  public loadAssets() {
+    this.pixi.app.loader
+        .add('pixie', 'assets/demo-story/pixie/pixie.json')
+        .add('bg', 'assets/demo-story/iP4_BGtile.jpg')
+        .add('fg', 'assets/demo-story/iP4_ground.png')
+        .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
+        .load(this.assetsLoaded.bind(this));
+  }
+
+  public onTouchStart() {
+    this.pixie.state.setAnimation(0, 'jump', false);
+    this.pixie.state.addAnimation(0, 'running', true, 0);
+  }
+
+  public assetsLoaded(loader: any, res: any) {
+
+    this.loadingPercentage = Math.floor(loader.progress);
+    this.loading = loader.loading;
+
+    console.log('loader', loader);
+    console.log('res', res);
+
+    this.background = PIXI.Sprite.from(res.bg.url);
+    this.background2 = PIXI.Sprite.from(res.bg.url);
+
+    this.foreground = PIXI.Sprite.from(res.fg.url);
+    this.foreground2 = PIXI.Sprite.from(res.fg.url);
+    this.foreground.anchor.set(0, 0.7);
+    this.foreground.position.y = this.pixi.app.screen.height;
+    this.foreground2.anchor.set(0, 0.7);
+    this.foreground2.position.y = this.pixi.app.screen.height;
+
+    this.pixi.app.stage.addChild(this.background, this.background2, this.foreground, this.foreground2);
+
+    // TODO: Fix spine crap
+    const spineData = res.pixie.data;
+
+    this.pixie = new PIXI.spine.Spine(spineData);
+
+    const scale = 0.3;
+
+    this.pixie.x = 1024 / 3;
+    this.pixie.y = 500;
+
+    this.pixie.scale.x = this.pixie.scale.y = scale;
+
+    this.pixi.app.stage.addChild(this.pixie);
+
+    this.pixie.stateData.setMix('running', 'jump', 0.2);
+    this.pixie.stateData.setMix('jump', 'running', 0.4);
+
+    this.pixie.state.setAnimation(0, 'running', true);
+
+    this.pixi.app.stage.on('pointerdown', this.onTouchStart);
+
+    this.pixi.app.start();
+    setTimeout(() => { this.pixi.app.stop(); }, 5000);
+
+  }
+
+
+  // TODO: Maybe get this out.
+  public addTicker() {
     this.pixi.app.ticker.add(() => {
-      this.position += 10;
+      this.position += 2;
 
       this.background.x = -(this.position * 0.6);
       this.background.x %= 1286 * 2;
@@ -113,68 +186,4 @@ export class EnvironmentComponent implements AfterViewInit {
       this.foreground2.x -= 1286;
     });
   }
-
-  public loadAssets() {
-    this.pixi.app.loader
-        .add('pixie', 'assets/demo-story/alien/alien.json')
-        .add('bg', 'assets/demo-story/iP4_BGtile.jpg')
-        .add('fg', 'assets/demo-story/iP4_ground.png')
-        // .progress((param) => { console.log('on progress', param); })
-        .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
-        .load(this.assetsLoaded.bind(this));
-  }
-
-  public onTouchStart() {
-    this.pixie.state.setAnimation(0, 'jump', false);
-    this.pixie.state.addAnimation(0, 'running', true, 0);
-  }
-
-  public assetsLoaded(loader: any, res: any) {
-
-    this.loadingPercentage = Math.floor(loader.progress);
-    this.loading = loader.loading;
-
-    console.log('loader', loader);
-    console.log('res', res);
-    console.log('pixi', this.pixi);
-    console.log('assets', this.assets);
-
-    this.background = PIXI.Sprite.from(res.bg.url);
-    this.background2 = PIXI.Sprite.from(res.bg.url);
-
-    this.foreground = PIXI.Sprite.from(res.fg.url);
-    this.foreground2 = PIXI.Sprite.from(res.fg.url);
-    this.foreground.anchor.set(0, 0.7);
-    this.foreground.position.y = this.pixi.app.screen.height;
-    this.foreground2.anchor.set(0, 0.7);
-    this.foreground2.position.y = this.pixi.app.screen.height;
-
-    this.pixi.app.stage.addChild(this.background, this.background2, this.foreground, this.foreground2);
-
-    // TODO: Fix spine crap
-    // const spineData = res.pixie.data;
-    //
-    // this.pixie = new PIXI.spine.Spine(spineData);
-    //
-    // const scale = 0.3;
-    //
-    // this.pixie.x = 1024 / 3;
-    // this.pixie.y = 500;
-    //
-    // this.pixie.scale.x = this.pixie.scale.y = scale;
-    //
-    // this.pixi.app.stage.addChild(this.pixie);
-
-    // this.pixie.stateData.setMix('running', 'jump', 0.2);
-    // this.pixie.stateData.setMix('jump', 'running', 0.4);
-    //
-    // this.pixie.state.setAnimation(0, 'running', true);
-
-    this.pixi.app.stage.on('pointerdown', this.onTouchStart);
-
-    // this.pixi.app.start();
-
-  }
-
-
 }
