@@ -46,6 +46,10 @@ export class EnvironmentComponent implements AfterViewInit {
   public onResize(event) {
     this.innerWidth = window.innerWidth;
     this.innerHeight = window.innerHeight;
+    // console.log('this.foreground', this.foreground);
+    // console.log('this.background', this.background);
+    // console.log('this.pixie', this.pixie);
+    // this.pixi.sizeCollection(undefined, {width: this.innerWidth, height: this.innerHeight});
   }
 
   constructor(
