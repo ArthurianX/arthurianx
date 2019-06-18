@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, HostListener, Input, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, Input, OnChanges, OnInit, SimpleChanges, ViewChild } from '@angular/core';
 
 import 'pixi-spine';
 import 'pixi-viewport';
@@ -14,15 +14,15 @@ const svgLoader = GraphicsSVG;
   styleUrls: ['./environment.component.sass'],
   // providers: [ GraphicsSVG ]
 })
-export class EnvironmentComponent implements AfterViewInit {
+export class EnvironmentComponent implements AfterViewInit, OnChanges {
   @Input() public speed: number;
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
 
   public loadingPercentage: number;
   public loading: boolean;
+  public accoef = 0; // Acceleration Coefficient.
 
   /* Pixie Demo Stuff */
-  public position = 0;
   public background: PIXI.Sprite;
   public background2: PIXI.Sprite;
   public foregroundRealSize = [1286, 179];
@@ -61,6 +61,13 @@ export class EnvironmentComponent implements AfterViewInit {
     this.innerHeight = window.innerHeight;
     // console.log(new svgLoader());
 
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (changes.speed && changes.speed.currentValue) {
+      this.accoef = changes.speed.currentValue * 3;
+      // TODO: Formulate a better speed setting
+    }
   }
 
   ngAfterViewInit() {
@@ -134,22 +141,22 @@ export class EnvironmentComponent implements AfterViewInit {
     this.pixi.app.stage.on('pointerdown', this.onTouchStart);
 
     this.pixi.app.start();
-    setTimeout(() => { this.pixi.app.stop(); }, 15000);
   }
 
   public addTicker() {
+    let position = 0;
     this.pixi.app.ticker.add(() => {
-      this.position += 2;
+      position += this.accoef; // Position is shifted by an acceleration coefficient.
 
       // Background spacing on x axis happens in relation to the layers calculated widths
-      this.background.x = -(this.position * 0.6); // Background moves slower than foreground
+      this.background.x = -(position * 0.6); // Background moves slower than foreground
       this.background.x %= this.bgCalcSize[0] * 2;
       if (this.background.x < 0) {
         this.background.x += this.bgCalcSize[0] * 2;
       }
       this.background.x -= this.bgCalcSize[0];
 
-      this.background2.x = -(this.position * 0.6) + this.bgCalcSize[0];
+      this.background2.x = -(position * 0.6) + this.bgCalcSize[0];
       this.background2.x %= this.bgCalcSize[0] * 2;
       if (this.background2.x < 0) {
         this.background2.x += this.bgCalcSize[0] * 2;
@@ -157,14 +164,14 @@ export class EnvironmentComponent implements AfterViewInit {
       this.background2.x -= this.bgCalcSize[0];
 
       // Foreground spacing on x axis happens in relation to the layers calculated widths
-      this.foreground.x = -this.position;
+      this.foreground.x = -position;
       this.foreground.x %= this.fgCalcSize[0] * 2;
       if (this.foreground.x < 0) {
         this.foreground.x += this.fgCalcSize[0] * 2;
       }
       this.foreground.x -= this.fgCalcSize[0];
 
-      this.foreground2.x = -this.position + this.fgCalcSize[0];
+      this.foreground2.x = -position + this.fgCalcSize[0];
       this.foreground2.x %= this.fgCalcSize[0] * 2;
       if (this.foreground2.x < 0) {
         this.foreground2.x += this.fgCalcSize[0] * 2;

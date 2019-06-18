@@ -1,2 +1,4 @@
-<span *ngIf="loading">{{this.loadingPercentage}}%</span>
+<div *ngIf="loading" fxFill fxLayoutAlign="center center">
+    <span>{{this.loadingPercentage}}%</span>
+</div>
 <canvas #pixiBackground id="pixiBackground"></canvas>
