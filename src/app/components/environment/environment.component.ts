@@ -25,8 +25,11 @@ export class EnvironmentComponent implements AfterViewInit {
   public position = 0;
   public background: PIXI.Sprite;
   public background2: PIXI.Sprite;
-  public foregroundSize = [1286, 179];
-  public backgroundSize = [1286, 640];
+  public foregroundRealSize = [1286, 179];
+  public backgroundRealSize = [1286, 640];
+  public bgCalcSize = [];
+  public fgCalcSize = [];
+  public combinedHeight = 819;
   public foreground: PIXI.Sprite;
   public foreground2: PIXI.Sprite;
   public pixie: any;
@@ -38,6 +41,7 @@ export class EnvironmentComponent implements AfterViewInit {
   private innerWidth: number;
   private innerHeight: number;
   private stage: PIXI.Container;
+  private renderer: any;
 
 
 
@@ -130,40 +134,42 @@ export class EnvironmentComponent implements AfterViewInit {
     this.pixi.app.stage.on('pointerdown', this.onTouchStart);
 
     this.pixi.app.start();
-    setTimeout(() => { this.pixi.app.stop(); }, 5000);
+    setTimeout(() => { this.pixi.app.stop(); }, 15000);
   }
 
   public addTicker() {
     this.pixi.app.ticker.add(() => {
       this.position += 2;
 
-      this.background.x = -(this.position * 0.6);
-      this.background.x %= 1286 * 2;
+      // Background spacing on x axis happens in relation to the layers calculated widths
+      this.background.x = -(this.position * 0.6); // Background moves slower than foreground
+      this.background.x %= this.bgCalcSize[0] * 2;
       if (this.background.x < 0) {
-        this.background.x += 1286 * 2;
+        this.background.x += this.bgCalcSize[0] * 2;
       }
-      this.background.x -= 1286;
+      this.background.x -= this.bgCalcSize[0];
 
-      this.background2.x = -(this.position * 0.6) + 1286;
-      this.background2.x %= 1286 * 2;
+      this.background2.x = -(this.position * 0.6) + this.bgCalcSize[0];
+      this.background2.x %= this.bgCalcSize[0] * 2;
       if (this.background2.x < 0) {
-        this.background2.x += 1286 * 2;
+        this.background2.x += this.bgCalcSize[0] * 2;
       }
-      this.background2.x -= 1286;
+      this.background2.x -= this.bgCalcSize[0];
 
+      // Foreground spacing on x axis happens in relation to the layers calculated widths
       this.foreground.x = -this.position;
-      this.foreground.x %= 1286 * 2;
+      this.foreground.x %= this.fgCalcSize[0] * 2;
       if (this.foreground.x < 0) {
-        this.foreground.x += 1286 * 2;
+        this.foreground.x += this.fgCalcSize[0] * 2;
       }
-      this.foreground.x -= 1286;
+      this.foreground.x -= this.fgCalcSize[0];
 
-      this.foreground2.x = -this.position + 1286;
-      this.foreground2.x %= 1286 * 2;
+      this.foreground2.x = -this.position + this.fgCalcSize[0];
+      this.foreground2.x %= this.fgCalcSize[0] * 2;
       if (this.foreground2.x < 0) {
-        this.foreground2.x += 1286 * 2;
+        this.foreground2.x += this.fgCalcSize[0] * 2;
       }
-      this.foreground2.x -= 1286;
+      this.foreground2.x -= this.fgCalcSize[0];
     });
   }
 
@@ -174,9 +180,9 @@ export class EnvironmentComponent implements AfterViewInit {
     this.foreground = PIXI.Sprite.from(res.fg.url);
     this.foreground2 = PIXI.Sprite.from(res.fg.url);
     this.foreground.anchor.set(0, 0.7);
-    this.foreground.position.y = this.pixi.app.screen.height;
+    this.foreground.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
     this.foreground2.anchor.set(0, 0.7);
-    this.foreground2.position.y = this.pixi.app.screen.height;
+    this.foreground2.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
 
     this.pixi.app.stage.addChild(this.background, this.background2, this.foreground, this.foreground2);
   }
@@ -197,14 +203,55 @@ export class EnvironmentComponent implements AfterViewInit {
   }
 
   public resizeAssets() {
+    // Set renderer devicePixelRatio size
+    this.renderer = this.pixi.app.renderer;
+    this.renderer.resolution = window.devicePixelRatio;
+
+    // Don't know what this is for
+    this.renderer.resize(this.innerWidth - 1, this.innerHeight);
+    this.renderer.resize(
+        this.innerWidth ,
+        this.innerHeight
+    );
+
+    this.renderer.plugins.interaction.resolution = window.devicePixelRatio;
+
     console.log('resizeAssets', this.pixie, this.foreground, this.background);
 
     // Pixie Stuff
     const scale = 0.3;
-    this.pixie.x = 1024 / 3;
+    this.pixie.x = 1024 / 5;
     this.pixie.y = 500;
     this.pixie.scale.x = this.pixie.scale.y = scale;
 
     // Foreground / Background
+    const bgSize = this.calculateAssetSize(this.backgroundRealSize[1], this.backgroundRealSize[0] / this.backgroundRealSize[1]);
+    this.bgCalcSize = [bgSize.width, bgSize.height]
+    const fgSize = this.calculateAssetSize(this.foregroundRealSize[1], this.foregroundRealSize[0] / this.foregroundRealSize[1]);
+    this.fgCalcSize = [fgSize.width, fgSize.height]
+
+    this.background.width = bgSize.width;
+    this.background.height = bgSize.height;
+    this.background2.width = bgSize.width;
+    this.background2.height = bgSize.height;
+
+    this.foreground.width = fgSize.width;
+    this.foreground.height = fgSize.height;
+    this.foreground2.width = fgSize.width;
+    this.foreground2.height = fgSize.height;
+
+    this.foreground.anchor.set(0, 0.7);
+    this.foreground.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
+    this.foreground2.anchor.set(0, 0.7);
+    this.foreground2.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
+  }
+
+  private calculateAssetSize(assetHeight, ratio) {
+    const height = this.innerHeight;
+    const defaultHeight = this.combinedHeight;
+
+    const calcHeight = (height * assetHeight) / defaultHeight;
+    const calcWidth = calcHeight * ratio;
+    return {width: calcWidth / window.devicePixelRatio, height: calcHeight  / window.devicePixelRatio};
   }
 }
