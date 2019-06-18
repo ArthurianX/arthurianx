@@ -12,7 +12,7 @@ export class StoryComponent implements OnInit {
 
   ngOnInit() {
     //  Demo Stuff, turn this off and enable dial when done.
-    this.globalSpeed = 3;
+    this.globalSpeed = 0.1;
   }
 
 

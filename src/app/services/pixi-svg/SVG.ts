@@ -226,7 +226,7 @@ export class GraphicsSVG extends PIXI.Graphics {
      * @param  {HTMLElement} svg
      */
     drawSVG(svg: HTMLElement): void {
-        console.log('Drawing SVG');
+        // console.log('Drawing SVG');
         // var children: HTMLCollection | NodeListOf<ChildNode> = svg.children || svg.childNodes;
         var children: NodeListOf<ChildNode> = svg.childNodes;
         // var children: HTMLCollection = svg.children;
@@ -243,12 +243,12 @@ export class GraphicsSVG extends PIXI.Graphics {
      * @param  {SVGElement} node
      */
     drawNode(parent: GraphicsExt, node: HTMLElement): void {
-        console.log('Drawing Node');
+        // console.log('Drawing Node');
         const types: string[] = ['Svg', 'G', 'Circle', 'Text', 'Line', 'Polyline', 'Ellipse', 'Rect', 'Polygon', 'Path'];
         this._graphics = new GraphicsExt()
         var tagName: string = node.tagName;
         var capitalizedTagName: string = tagName.charAt(0).toUpperCase() + tagName.slice(1);
-        console.log(capitalizedTagName + ': ' + types.indexOf(capitalizedTagName));
+        // console.log(capitalizedTagName + ': ' + types.indexOf(capitalizedTagName));
         if (types.indexOf(capitalizedTagName) != -1) {
             if (capitalizedTagName === 'Svg') {
                 var width: string = node.getAttribute('width');
@@ -256,7 +256,7 @@ export class GraphicsSVG extends PIXI.Graphics {
                 this._graphics.beginFill(0x000, 0).drawRect(0, 0, parseInt(width), parseInt(height))
             }
             (parent || this).addChild(this._graphics)
-            console.log('Drawing ' + capitalizedTagName + ' Node');
+            // console.log('Drawing ' + capitalizedTagName + ' Node');
             switch (capitalizedTagName) {
                 case 'Svg':
                     this.drawSvgNode(this._graphics, node);
