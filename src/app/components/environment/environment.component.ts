@@ -155,23 +155,26 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   public addTicker() {
     let position = 0;
-    this.pixi.app.ticker.add(() => {
+    this.pixi.app.ticker.add((time) => {
+      // console.log(time);
       position += this.accoef; // Position is shifted by an acceleration coefficient.
 
       // Background spacing on x axis happens in relation to the layers calculated widths
-      this.background.x = -(position * 0.6); // Background moves slower than foreground
+      this.background.x = -(position/* * 0.6*/); // Background moves slower than foreground
       this.background.x %= this.bgCalcSize[0] * 2;
       if (this.background.x < 0) {
         this.background.x += this.bgCalcSize[0] * 2;
       }
       this.background.x -= this.bgCalcSize[0];
+      // this.background.y -= this.tickerHop(-1.6, 1.6);
 
-      this.background2.x = -(position * 0.6) + this.bgCalcSize[0];
+      this.background2.x = -(position/* * 0.6*/) + this.bgCalcSize[0];
       this.background2.x %= this.bgCalcSize[0] * 2;
       if (this.background2.x < 0) {
         this.background2.x += this.bgCalcSize[0] * 2;
       }
       this.background2.x -= this.bgCalcSize[0];
+      // this.background2.y -= this.tickerHop(-1.6, 1.6);
 
       // Foreground spacing on x axis happens in relation to the layers calculated widths
       this.foreground.x = -position;
@@ -180,6 +183,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         this.foreground.x += this.fgCalcSize[0] * 2;
       }
       this.foreground.x -= this.fgCalcSize[0];
+      // this.foreground.y -= this.tickerHop(-0.6, 0.6);
 
       this.foreground2.x = -position + this.fgCalcSize[0];
       this.foreground2.x %= this.fgCalcSize[0] * 2;
@@ -187,6 +191,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         this.foreground2.x += this.fgCalcSize[0] * 2;
       }
       this.foreground2.x -= this.fgCalcSize[0];
+      // this.foreground2.y -= this.tickerHop(-0.6, 0.6);
 
       // Months
       this.months.x = -position;
@@ -324,5 +329,12 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
       // new PIXIGlowFilter(),
       // new PIXINoiseFilter()
     ];
+  }
+
+  private tickerHop(min, max) {
+    // min = Math.ceil(min);
+    // max = Math.floor(max);
+    // return Math.floor(Math.random() * (max - min + 1)) + min;
+    return (Math.random() * (max - min) + min).toFixed(2);
   }
 }
