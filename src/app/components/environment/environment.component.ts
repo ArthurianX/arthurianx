@@ -330,7 +330,6 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   private containersMonths(res: any) {
     this.months = PIXI.Sprite.from(res.months.url);
-    debugger;
     this.months2 = PIXI.Sprite.from(res.months.url);
 
     if (this.visible.months) {
