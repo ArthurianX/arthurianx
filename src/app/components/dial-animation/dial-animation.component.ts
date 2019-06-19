@@ -68,8 +68,8 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
   }
 
   public ngOnInit() {
-    console.log('animation logo');
-    console.log(this);
+    // console.log('animation logo');
+    // console.log(this);
   }
 
   public ngOnDestroy() {

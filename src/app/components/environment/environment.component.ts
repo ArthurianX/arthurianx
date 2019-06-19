@@ -23,7 +23,11 @@ import {
   Power4,
   Linear
 } from 'gsap';
-import * as PixiPlugin_ from 'gsap/PixiPlugin';﻿
+import * as PixiPlugin_ from 'gsap/PixiPlugin';
+import { Subject } from 'rxjs';
+import { throttleTime } from 'rxjs/operators';
+
+﻿
 const PixiPlugin = PixiPlugin_;
 
 // TODO: READ https://github.com/cursedcoder/awesome-pixijs
@@ -46,9 +50,21 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   public loadingPercentage: number;
   public loading: boolean;
+  public tickerStreamData: Subject<any> = new Subject();
+  public tickerState: {
+    lastMonth: 'Jan';
+    month: 'Jan';
+    lastYear: 1985;
+    year: 1985;
+  } = {
+    lastMonth: 'Jan',
+    month: 'Jan',
+    lastYear: 1985,
+    year: 1985
+  };
 
   public accoef = 0; // Acceleration Coefficient.
-  public outsideTickerAnimationDuration = 3; // Animations outside
+  public outsideTickerAnimationDuration = 2; // Animations outside
 
   public visible: {
     sky: boolean;
@@ -80,6 +96,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   public clouds: PIXI.Graphics[] = [];
   public cloudsMovementCoefficient: number[] = [];
 
+  public monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
   public foregroundRealSize = [6000, 500];
   public backgroundRealSize = [6000, 500];
   public monthsRealSize = [6000, 500];
@@ -145,6 +162,25 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     });
 
     this.initWorld();
+
+    // Change the month with GSAP
+    this.tickerStreamData
+        .pipe(
+            throttleTime(500)
+        )
+        .subscribe((res) => {
+          // console.log('Ticker Stream', res);
+          const monthPixels = res.width / 12;
+          let month;
+          if (res.x > 0) {
+            month = this.monthsList[12 - Math.ceil(res.x / monthPixels)];
+          } else {
+            month = this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))];
+          }
+          if (month) {
+            this.adjustSeason(month);
+          }
+        });
   }
 
   public initWorld() {
@@ -229,6 +265,8 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     EnvironmentComponent.spriteMotion(this.sun, this.tickerPosition, [this.innerWidth + 280, 0], false, 0.4);
     EnvironmentComponent.spriteMotion(this.sun2, this.tickerPosition, [this.innerWidth + 280, 0], true, 0.4);
+
+    this.updateTickerState(this.months.width, this.months.scale, this.months.x, this.months.position)
   }
 
   public resizeAssets() {
@@ -383,12 +421,12 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
      * in WebGL the image size should preferably be a power of two
      */
     this.sky = new PIXI.TilingSprite(
-        this.skiTextures[0],
+        this.skiTextures[1],
         this.pixi.app.screen.width,
         this.pixi.app.screen.height,
     );
     this.sky1 = new PIXI.TilingSprite(
-        this.skiTextures[1],
+        this.skiTextures[0],
         this.pixi.app.screen.width,
         this.pixi.app.screen.height,
     );
@@ -397,15 +435,6 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     if (this.visible.sky) {
       this.pixi.app.stage.addChild(this.sky1, this.sky);
-
-      setTimeout(() => {
-        this.colorSunChange('autumn', this.sun, this.sun2);
-        this.colorSkyChange('autumn', this.sky, this.sky1);
-        setTimeout(() => {
-          this.colorSunChange('summer', this.sun, this.sun2);
-          this.colorSkyChange('summer', this.sky, this.sky1);
-        }, 5000);
-      }, 5000);
     }
   }
 
@@ -486,5 +515,36 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   private randint(min, max): number {
     return Math.random() * (max - min) + min;
+  }
+
+  private updateTickerState(width: number, scale: PIXI.IPoint, x: number, position: PIXI.IPoint) {
+    const payload = { width, scale, x, position };
+    this.tickerStreamData.next(payload);
+  }
+
+  private adjustSeason(month) {
+    if (this.tickerState.month !== month) {
+      this.tickerState.month = month;
+
+      // TODO: Introduce a animation running variable so animations don't overlap
+      switch (month) {
+        case 'Feb':
+          this.colorSunChange('spring2', this.sun, this.sun2);
+          this.colorSkyChange('spring2', this.sky, this.sky1);
+          break;
+        case 'May':
+          this.colorSunChange('summer', this.sun, this.sun2);
+          this.colorSkyChange('summer', this.sky, this.sky1);
+          break;
+        case 'Aug':
+          this.colorSunChange('autumn', this.sun, this.sun2);
+          this.colorSkyChange('autumn', this.sky, this.sky1);
+          break;
+        case 'Nov':
+          this.colorSunChange('winter', this.sun, this.sun2);
+          this.colorSkyChange('winter', this.sky, this.sky1);
+          break;
+      }
+    }
   }
 }
