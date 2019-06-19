@@ -7,6 +7,7 @@ import { Component, OnInit } from '@angular/core';
 })
 export class StoryComponent implements OnInit {
   public globalSpeed: number;
+  public showDial = false;
 
   constructor() { }
 
@@ -25,4 +26,7 @@ export class StoryComponent implements OnInit {
     this.globalSpeed = speed;
   }
 
+    envCbck($event: any) {
+      this.showDial = true;
+    }
 }
