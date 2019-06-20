@@ -24,13 +24,11 @@ import {
   Linear
 } from 'gsap';
 import * as PixiPlugin_ from 'gsap/PixiPlugin';
+const PixiPlugin = PixiPlugin_;
 import { Subject } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
+import { TerrainGen } from '../../interfaces/environment.interface';
 
-﻿
-const PixiPlugin = PixiPlugin_;
-
-// TODO: READ https://github.com/cursedcoder/awesome-pixijs
 
 @Component({
   selector: 'app-environment',
@@ -64,7 +62,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   };
 
   public accoef = 0; // Acceleration Coefficient.
-  public outsideTickerAnimationDuration = 2; // Animations outside
+  public outsideTickerAnimationDuration = 3; // Animations outside
 
   public visible: {
     sky: boolean;
@@ -77,13 +75,15 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     sky: true,
     sun: true,
     clouds: true,
-    hills: false,
+    hills: true,
     road: true,
     months: true
   };
 
   public background: PIXI.Sprite;
   public background2: PIXI.Sprite;
+  public background3: PIXI.Sprite;
+  public background4: PIXI.Sprite;
   public foreground: PIXI.Sprite;
   public foreground2: PIXI.Sprite;
   public months: PIXI.Sprite;
@@ -97,10 +97,29 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   public cloudsMovementCoefficient: number[] = [];
 
   public monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  public foregroundRealSize = [6000, 500];
-  public backgroundRealSize = [6000, 500];
+  public foregroundRealSize = [3708, 545];
+  public backgroundRealSize = [6000, 500]; // to be deleted
   public monthsRealSize = [6000, 500];
-  public combinedHeight = 1100;
+  public combinedHeight = 1500;
+  public foregroundTerrain: PIXI.Sprite;
+  public foregroundTerrain1: PIXI.Sprite;
+  public foregroundTerrainSettings: TerrainGen = {
+    width: 6000,
+    height: 700,
+    amplitude: 128,
+    wavelength: 128,
+    octaves: 2
+  };
+
+  public backgroundTerrain: PIXI.Sprite;
+  public backgroundTerrain1: PIXI.Sprite;
+  public backgroundTerrainSettings: TerrainGen = {
+    width: 6000,
+    height: 700,
+    amplitude: 128,
+    wavelength: 128,
+    octaves: 2
+  };
 
   public bgCalcSize = [];
   public fgCalcSize = [];
@@ -216,6 +235,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         .add('sky5', 'assets/story/sky/sky5.jpg')
         .add('sun', 'assets/story/sky/sun.png')
         .add('sun2', 'assets/story/sky/sun.png')
+        .add('ground', 'assets/story/soil/soil-tile.png')
         .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
         .load(this.assetsLoaded.bind(this));
   }
@@ -225,12 +245,14 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.loading = loader.loading;
     console.log('assetsLoaded', loader, res);
 
-    this.containersBackground(res); // to be deleted
-    this.containersRunner(res); // to be deleted
+    // TODO: Order is really important here, last in > first on top.
     this.containersSky(res);
+    this.containersTerrain();
+    this.containersGround(res);
     this.containersSun(res);
     this.containersMonths(res);
     this.containersClouds();
+    this.containersRunner(res); // to be deleted
 
     // Resize everything put on stage
     this.resizeAssets();
@@ -248,11 +270,14 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.tickerPosition += this.accoef; // Position is shifted by an acceleration coefficient.
 
     // Background spacing on x axis happens in relation to the layers calculated widths
-    EnvironmentComponent.spriteMotion(this.background2, this.tickerPosition, this.bgCalcSize);
-    EnvironmentComponent.spriteMotion(this.background, this.tickerPosition, this.bgCalcSize, true);
+    EnvironmentComponent.spriteMotion(this.background2, this.tickerPosition, this.bgCalcSize, false, 0.8);
+    EnvironmentComponent.spriteMotion(this.background, this.tickerPosition, this.bgCalcSize, true, 0.8);
 
-    EnvironmentComponent.spriteMotion(this.foreground2, this.tickerPosition, this.fgCalcSize);
-    EnvironmentComponent.spriteMotion(this.foreground, this.tickerPosition, this.fgCalcSize, true);
+    EnvironmentComponent.spriteMotion(this.background3, this.tickerPosition, this.bgCalcSize, false, 0.8);
+    EnvironmentComponent.spriteMotion(this.background4, this.tickerPosition, this.bgCalcSize, true, 0.8);
+
+    EnvironmentComponent.spriteMotion(this.foreground2, this.tickerPosition, this.fgCalcSize, false, 1.2);
+    EnvironmentComponent.spriteMotion(this.foreground, this.tickerPosition, this.fgCalcSize, true, 1.2);
 
     EnvironmentComponent.spriteMotion(this.months2, this.tickerPosition, this.mtCalcSize);
     EnvironmentComponent.spriteMotion(this.months, this.tickerPosition, this.mtCalcSize, true);
@@ -293,7 +318,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     // TODO: Refactor the logic here, it's crappy.
     // Foreground / Background
-    const bgSize = this.calculateAssetSize(this.backgroundRealSize[1], this.backgroundRealSize[0] / this.backgroundRealSize[1]);
+    const bgSize = this.calculateAssetSize(this.foregroundTerrainSettings.height, this.foregroundTerrainSettings.width / this.foregroundTerrainSettings.height);
     this.bgCalcSize = [bgSize.width, bgSize.height];
     const fgSize = this.calculateAssetSize(this.foregroundRealSize[1], this.foregroundRealSize[0] / this.foregroundRealSize[1]);
     this.fgCalcSize = [fgSize.width, fgSize.height];
@@ -301,15 +326,29 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     const mtSize = this.calculateAssetSize(this.monthsRealSize[1], this.monthsRealSize[0] / this.monthsRealSize[1]);
     this.mtCalcSize = [mtSize.width, mtSize.height];
 
+    this.sky.width = this.pixi.app.stage.width;
+    this.sky.height = this.pixi.app.stage.height;
+    this.sky1.width = this.pixi.app.stage.width;
+    this.sky1.height = this.pixi.app.stage.height;
+
     this.background.width = bgSize.width;
     this.background.height = bgSize.height;
     this.background2.width = bgSize.width;
     this.background2.height = bgSize.height;
+    this.background3.width = bgSize.width;
+    this.background3.height = bgSize.height;
+    this.background4.width = bgSize.width;
+    this.background4.height = bgSize.height;
 
-    this.foreground.width = fgSize.width;
-    this.foreground.height = fgSize.height;
-    this.foreground2.width = fgSize.width;
-    this.foreground2.height = fgSize.height;
+    this.background.anchor.set(0, 0.7);
+    this.background2.anchor.set(0, 0.7);
+    this.background3.anchor.set(0, 0.9);
+    this.background4.anchor.set(0, 0.9);
+
+    this.background.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.background2.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.background3.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.background4.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
 
     this.months.width = mtSize.width;
     this.months.height = mtSize.height;
@@ -322,25 +361,59 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.months2.anchor.set(0, 1);
     this.months2.position.y = this.months.height;
 
-    this.foreground.anchor.set(0, 1.62);
-    this.foreground2.anchor.set(0, 1.62);
+    // FOREGROUND (soil, ground) dimensions
+    this.foreground.width = fgSize.width;
+    this.foreground.height = fgSize.height;
+    this.foreground2.width = fgSize.width;
+    this.foreground2.height = fgSize.height;
+
+
+    this.foreground.anchor.set(0, 0.8);
+    this.foreground2.anchor.set(0, 0.8);
     // Set it at the bottom of the screen
     this.foreground.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
     this.foreground2.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
   }
 
-  private containersBackground(res: any) {
-    this.background = PIXI.Sprite.from(res.clouds1.url);
-    this.background2 = PIXI.Sprite.from(res.clouds.url);
-
-    this.foreground = PIXI.Sprite.from(res.hills1.url);
-    this.foreground2 = PIXI.Sprite.from(res.hills.url);
-
-    if (this.visible.sky) {
-      this.pixi.app.stage.addChild(this.background, this.background2);
+  public receiveTerrain(background: 'foreground' | 'background', $event: PIXI.Sprite[]) {
+    console.log('receiveTerrain for ', background, $event);
+    switch (background) {
+      case 'background':
+        this.backgroundTerrain = $event[1];
+        this.backgroundTerrain1 = $event[0];
+        break;
+      case 'foreground':
+        this.foregroundTerrain = $event[1];
+        this.foregroundTerrain1 = $event[0];
+        break;
     }
+  }
+
+  private containersTerrain() {
+    // TODO: Do something about the way we receive and apply the hills
+    this.background = this.backgroundTerrain;
+    this.background2 = this.backgroundTerrain1;
+    this.background3 = this.foregroundTerrain;
+    this.background4 = this.foregroundTerrain1;
+    // Initial tint
+    this.background.tint = 0x5BAF5D;
+    this.background2.tint = 0x5BAF5D;
+    this.background3.tint = 0x509B50;
+    this.background4.tint = 0x509B50;
+    // Flip the second tile sprite, to match the first
+    // this.background2.scale.x *= -1;
+    // this.background4.scale.x *= -1;
 
     if (this.visible.hills) {
+      this.pixi.app.stage.addChild(this.background3, this.background4, this.background, this.background2);
+    }
+  }
+
+  private containersGround(res: any) {
+    this.foreground = PIXI.Sprite.from(res.ground.url);
+    this.foreground2 = PIXI.Sprite.from(res.ground.url);
+
+    if (this.visible.road) {
       this.pixi.app.stage.addChild(this.foreground, this.foreground2);
     }
   }
@@ -491,6 +564,38 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     TweenLite.to(sun1, this.outsideTickerAnimationDuration, { pixi: { tint }});
   }
 
+  private colorHillsChange(toTint: 'spring' | 'summer' | 'autumn' | 'winter' | 'spring2', bg, bg1, bg2, bg3) {
+    let tint = 0x509B50;
+    let tint1 = 0x5BAF5D;
+    switch (toTint) {
+      case 'spring':
+        tint = 0x00796B;
+        tint1 = 0x00897B;
+        break;
+      case 'summer':
+        tint = 0x00796B;
+        tint1 = 0x00897B;
+        break;
+      case 'autumn':
+        tint = 0x00796B;
+        tint1 = 0x00897B;
+        break;
+      case 'winter':
+        tint = 0x00796B;
+        tint1 = 0x00897B;
+        break;
+      case 'spring2':
+        tint = 0x00796B;
+        tint1 = 0x00897B;
+        break;
+    }
+
+    TweenLite.to(bg, this.outsideTickerAnimationDuration, { pixi: { tint }});
+    TweenLite.to(bg1, this.outsideTickerAnimationDuration, { pixi: { tint }});
+    TweenLite.to(bg2, this.outsideTickerAnimationDuration, { pixi: { tint1 }});
+    TweenLite.to(bg3, this.outsideTickerAnimationDuration, { pixi: { tint1 }});
+  }
+
   private calculateAssetSize(assetHeight, ratio) {
     const height = this.innerHeight;
     const defaultHeight = this.combinedHeight;
@@ -527,22 +632,28 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
       this.tickerState.month = month;
 
       // TODO: Introduce a animation running variable so animations don't overlap
+
+      // TODO: Handle case of user scrolling in reverse (current months.X > last months.X)
       switch (month) {
         case 'Feb':
           this.colorSunChange('spring2', this.sun, this.sun2);
           this.colorSkyChange('spring2', this.sky, this.sky1);
+          this.colorHillsChange('spring2', this.background, this.background2, this.background3, this.background4);
           break;
         case 'May':
           this.colorSunChange('summer', this.sun, this.sun2);
           this.colorSkyChange('summer', this.sky, this.sky1);
+          this.colorHillsChange('summer', this.background, this.background2, this.background3, this.background4);
           break;
         case 'Aug':
           this.colorSunChange('autumn', this.sun, this.sun2);
           this.colorSkyChange('autumn', this.sky, this.sky1);
+          this.colorHillsChange('autumn', this.background, this.background2, this.background3, this.background4);
           break;
         case 'Nov':
           this.colorSunChange('winter', this.sun, this.sun2);
           this.colorSkyChange('winter', this.sky, this.sky1);
+          this.colorHillsChange('winter', this.background, this.background2, this.background3, this.background4);
           break;
       }
     }

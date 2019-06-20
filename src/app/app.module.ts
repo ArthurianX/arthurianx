@@ -17,9 +17,13 @@ import { DialAnimationComponent } from './components/dial-animation';
 import { EnvironmentComponent } from './components/environment/environment.component';
 import { DialSceneComponent } from './components/rotating-dial/dial-scene.component';
 import { RotatingDialComponent } from './components/rotating-dial/rotating-dial.component';
+import { PlayComponent } from './containers/play/play.component';
+import { TerrainCreatorComponent } from './components/terrain-creator/terrain-creator.component';
 
 @NgModule({
   declarations: [
+    TerrainCreatorComponent,
+    PlayComponent,
     DialSceneComponent,
     RotatingDialComponent,
     DialAnimationComponent,
