@@ -84,14 +84,14 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   public soil1: PIXI.Sprite;
   public yearWidth = 70;
   public year: PIXI.Text;
-  public year2: PIXI.Text;
+  public year1: PIXI.Text;
   public months: PIXI.Sprite;
   public months2: PIXI.Sprite;
   public sky: PIXI.TilingSprite;
   public sky1: PIXI.TilingSprite;
   public skiTextures: PIXI.Texture[] = [];
   public sun: PIXI.Graphics | PIXI.Sprite;
-  public sun2: PIXI.Graphics | PIXI.Sprite;
+  public sun1: PIXI.Graphics | PIXI.Sprite;
   public clouds: PIXI.Graphics[] = [];
   public cloudMotion: number[] = [];
 
@@ -219,7 +219,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         .add('sky4', 'assets/story/sky/sky4.jpg')
         .add('sky5', 'assets/story/sky/sky5.jpg')
         .add('sun', 'assets/story/sky/sun.png')
-        .add('sun2', 'assets/story/sky/sun.png')
+        .add('sun1', 'assets/story/sky/sun.png')
         .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
         .add('ground', 'assets/story/soil/soil-tile.png')
         .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
@@ -274,7 +274,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     EnvironmentComponent.spriteMotion(this.months, this.ticker, this.monthsSizes, true);
     // Has to have width of months.
     EnvironmentComponent.spriteMotion(this.year, this.ticker, [this.monthsSizes[0], this.monthsSizes[1]]);
-    EnvironmentComponent.spriteMotion(this.year2, this.ticker, [this.monthsSizes[0], this.monthsSizes[1]], true);
+    EnvironmentComponent.spriteMotion(this.year1, this.ticker, [this.monthsSizes[0], this.monthsSizes[1]], true);
 
     this.clouds.map((cloud, idx) => {
       // TODO Maybe also show two sets of clouds, to be more continuous
@@ -283,7 +283,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     });
 
     EnvironmentComponent.spriteMotion(this.sun, this.ticker, [this.innerWidth + 280, 0], false, 0.4);
-    EnvironmentComponent.spriteMotion(this.sun2, this.ticker, [this.innerWidth + 280, 0], true, 0.4);
+    EnvironmentComponent.spriteMotion(this.sun1, this.ticker, [this.innerWidth + 280, 0], true, 0.4);
 
     this.tickerLoop.next({
       width: this.months.width,
@@ -314,6 +314,16 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     // this.pixieSpineDemo.x = 1024 / 5;
     // this.pixieSpineDemo.y = 500;
     // this.pixieSpineDemo.scale.x = this.pixieSpineDemo.scale.y = scale;
+
+    /*
+    * NOTE: Resize Rules
+    * - resize item to specific width / height (TILES) and devicePixelRatio
+    * - resize item to app width AND / OR height (SKY, which doesn't need to move) and devicePixelRatio
+    * - resize item to its own width and devicePixelRatio
+    * - resize only the scale
+    * - TODO: how to handle anchors ?
+    * - TODO: how to handle position ?
+    * */
 
     // TODO: Refactor the logic here, it's crappy.
     // Foreground / Background
@@ -375,8 +385,15 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     this.sun.scale.x = 1 / window.devicePixelRatio;
     this.sun.scale.y = 1 / window.devicePixelRatio;
-    this.sun2.scale.x = 1 / window.devicePixelRatio;
-    this.sun2.scale.y = 1 / window.devicePixelRatio;
+    this.sun1.scale.x = 1 / window.devicePixelRatio;
+    this.sun1.scale.y = 1 / window.devicePixelRatio;
+
+    this.year.y = this.year.y / window.devicePixelRatio;
+    this.year.scale.x = 1 / window.devicePixelRatio;
+    this.year.scale.y = 1 / window.devicePixelRatio;
+    this.year1.y = this.year1.y / window.devicePixelRatio;
+    this.year1.scale.x = 1 / window.devicePixelRatio;
+    this.year1.scale.y = 1 / window.devicePixelRatio;
 
     this.clouds.map((cloud) => {
       cloud.scale.x = 1 / window.devicePixelRatio;
@@ -506,18 +523,18 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     });
 
     this.year = new PIXI.Text(this.tickerState.year.toString(), style);
-    this.year2 = new PIXI.Text((this.tickerState.year + 1).toString(), style);
+    this.year1 = new PIXI.Text((this.tickerState.year + 1).toString(), style);
 
     this.year.width = this.yearWidth;
-    this.year2.width = this.yearWidth;
+    this.year1.width = this.yearWidth;
 
     this.year.y = 20;
-    this.year2.y = 20;
+    this.year1.y = 20;
 
     this.year.anchor.set(0.5, 0);
-    this.year2.anchor.set(0.5, 0);
+    this.year1.anchor.set(0.5, 0);
 
-    this.app.stage.addChild(this.year, this.year2);
+    this.app.stage.addChild(this.year, this.year1);
   }
 
   private containersClouds() {
@@ -543,13 +560,13 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   private containersSun(res) {
     this.sun = PIXI.Sprite.from(res.sun.url);
-    this.sun2 = PIXI.Sprite.from(res.sun2.url);
+    this.sun1 = PIXI.Sprite.from(res.sun1.url);
     if (this.visible.sun) {
       const tint = 0xe3eba4;
       this.sun.tint = tint;
-      this.sun2.tint = tint;
+      this.sun1.tint = tint;
       this.app.stage.addChild(this.sun);
-      this.app.stage.addChild(this.sun2); // Uncomment
+      this.app.stage.addChild(this.sun1); // Uncomment
     }
   }
 
@@ -701,25 +718,25 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
       // TODO: Handle case of user scrolling in reverse (current months.X > last months.X)
       switch (month) {
         case 'Feb':
-          this.colorSunChange('spring2', this.sun, this.sun2);
+          this.colorSunChange('spring2', this.sun, this.sun1);
           this.colorSkyChange('spring2', this.sky, this.sky1);
           this.colorHillsChange('spring2', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
           break;
         case 'May':
-          this.colorSunChange('summer', this.sun, this.sun2);
+          this.colorSunChange('summer', this.sun, this.sun1);
           this.colorSkyChange('summer', this.sky, this.sky1);
           this.colorHillsChange('summer', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
 
           // Changing the year now yielded the best results
           if (reverse) {
-            this.year2.text = (this.tickerState.year - 1).toString();
+            this.year1.text = (this.tickerState.year - 1).toString();
           } else {
-            this.year2.text = (this.tickerState.year + 1).toString();
+            this.year1.text = (this.tickerState.year + 1).toString();
           }
           
           break;
         case 'Aug':
-          this.colorSunChange('autumn', this.sun, this.sun2);
+          this.colorSunChange('autumn', this.sun, this.sun1);
           this.colorSkyChange('autumn', this.sky, this.sky1);
           this.colorHillsChange('autumn', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
 
@@ -734,7 +751,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
           
           break;
         case 'Nov':
-          this.colorSunChange('winter', this.sun, this.sun2);
+          this.colorSunChange('winter', this.sun, this.sun1);
           this.colorSkyChange('winter', this.sky, this.sky1);
           this.colorHillsChange('winter', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
           break;
@@ -756,7 +773,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.backHills.filters ? this.backHills.filters.push(this.dShadow) : this.backHills.filters = [this.dShadow];
     this.backHills1.filters ? this.backHills1.filters.push(this.dShadow) : this.backHills1.filters = [this.dShadow];
     this.sun.filters ? this.sun.filters.push(this.dShadow) : this.sun.filters = [this.dShadow];
-    this.sun2.filters ? this.sun2.filters.push(this.dShadow) : this.sun2.filters = [this.dShadow];
+    this.sun1.filters ? this.sun1.filters.push(this.dShadow) : this.sun1.filters = [this.dShadow];
 
     // this.clouds.map((cloud) => {
     //   cloud.filters = [this.dShadow];
@@ -764,7 +781,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     // this.sky.filters ? this.sky.filters.push(this.fgFilter) : this.sky.filters = [this.fgFilter];
     // this.sky1.filters ? this.sky1.filters.push(this.fgFilter) : this.sky1.filters = [this.fgFilter];
     // this.sun.filters ? this.sun.filters.push(this.fgFilter) : this.sun.filters = [this.fgFilter];
-    // this.sun2.filters ? this.sun2.filters.push(this.fgFilter) : this.sun2.filters = [this.fgFilter];
+    // this.sun1.filters ? this.sun1.filters.push(this.fgFilter) : this.sun1.filters = [this.fgFilter];
     // this.soil.filters ? this.soil.filters.push(this.fgFilter) : this.soil.filters = [this.fgFilter];
     // this.soil1.filters ? this.soil1.filters.push(this.fgFilter) : this.soil1.filters = [this.fgFilter];
   }
