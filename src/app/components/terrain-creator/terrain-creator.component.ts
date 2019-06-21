@@ -5,53 +5,63 @@ import { Sprite } from 'pixi.js';
 
 @Component({
   selector: 'app-terrain-creator',
-  template: `<canvas #terrain id="#terrain"></canvas><canvas #terrain1 id="#terrain"></canvas>`,
+  template: `
+    <canvas #terrain id="#terrain"></canvas>
+    <app-terrain-creator
+        *ngIf="perlinPoints"
+        [drawPoints]="perlinPoints"
+        [terrainSettings]="terrainSettings"
+        (generatedTerrain)="perlinGeneratedCanvas($event)"
+    ></app-terrain-creator>
+  `,
   styles: ['canvas { opacity: 0; overflow: hidden; pointer-events: none }'],
   encapsulation: ViewEncapsulation.ShadowDom
 })
 export class TerrainCreatorComponent implements OnInit {
 
   @Input() public terrainSettings: TerrainGen;
-  @Output() public generatedTerrain: EventEmitter<PIXI.Sprite[]> = new EventEmitter();
+  @Input() public drawPoints: {pos: number[]};
+  @Output() public generatedTerrain: EventEmitter<PIXI.Sprite> = new EventEmitter();
+  @Output() public generatedMultiTerrain: EventEmitter<PIXI.Sprite[]> = new EventEmitter();
+
+  public perlinPoints: {pos: number[]};
 
   @ViewChild('terrain', {static: true}) terrainContainerRef: ElementRef;
-  @ViewChild('terrain1', {static: true}) terrainContainerRef1: ElementRef;
 
   constructor() {}
 
   ngOnInit(): void {
 
     // NOTE: Generate the first noise on canvas, and save the generated Perlin Points to a constant
-    const perlinPoints = new TerrainGenerator(
-        this.terrainContainerRef,
-        this.terrainSettings.width,
-        this.terrainSettings.height,
-        this.terrainSettings.amplitude ? this.terrainSettings.amplitude : undefined,
-        this.terrainSettings.wavelength ? this.terrainSettings.wavelength : undefined,
-        this.terrainSettings.octaves ? this.terrainSettings.octaves : undefined,
-    );
+    if (!this.drawPoints) {
+      this.perlinPoints = new TerrainGenerator(
+          this.terrainContainerRef,
+          this.terrainSettings.width,
+          this.terrainSettings.height,
+          this.terrainSettings.amplitude ? this.terrainSettings.amplitude : undefined,
+          this.terrainSettings.wavelength ? this.terrainSettings.wavelength : undefined,
+          this.terrainSettings.octaves ? this.terrainSettings.octaves : undefined,
+      );
+    } else {
+      TerrainGenerator.drawLine(
+          {pos: this.drawPoints.pos.reverse()},
+          this.terrainContainerRef.nativeElement.getContext('2d'),
+          this.terrainSettings.width,
+          this.terrainSettings.height,
+      );
+      const tSprite = new Sprite(PIXI.Texture.from(this.terrainContainerRef.nativeElement,
+          { width: this.terrainSettings.width, height: this.terrainSettings.height}
+      ));
+      this.generatedTerrain.emit(tSprite);
+    }
 
-    const tSprite = new Sprite(PIXI.Texture.from(this.terrainContainerRef.nativeElement,
-        { width: this.terrainSettings.width, height: this.terrainSettings.height}
-        ));
-
-    // NOTE: Reverse the Perlin Points and draw again on the canvas.
-    // Need to flip the second canvas so we can build the tile properly
-    perlinPoints.pos.reverse();
-    TerrainGenerator.drawLine(
-        perlinPoints,
-        this.terrainContainerRef1.nativeElement.getContext('2d') ,
-        this.terrainSettings.width,
-        this.terrainSettings.height
-    );
-
-    // NOTE: Make a PIXI.Sprite of the mirrored canvas as well.
-    const tDoubleSprite = new Sprite(PIXI.Texture.from(this.terrainContainerRef1.nativeElement,
-        { width: this.terrainSettings.width, height: this.terrainSettings.height}
-    ));
-
-    this.generatedTerrain.emit([tSprite, tDoubleSprite]);
   }
 
 
+  perlinGeneratedCanvas($event: PIXI.Sprite) {
+    const tSprite = new Sprite(PIXI.Texture.from(this.terrainContainerRef.nativeElement,
+        { width: this.terrainSettings.width, height: this.terrainSettings.height}
+    ));
+    this.generatedMultiTerrain.emit([tSprite, $event]);
+  }
 }
