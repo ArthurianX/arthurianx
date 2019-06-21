@@ -19,18 +19,27 @@ export class TerrainGenerator {
     private A = 1664525;
     private C = 1;
     private Z: number;
-
     // perlin line plotting
     public static drawLine(L, canvasContext, width, height) {
+        const drawABitOutOfBounds = (i, points) => {
+            if (i === 0) {
+                return -1;
+            } else if (i === points.pos.length -1) {
+                return i + 1;
+            } else {
+                return i;
+            }
+        }
         canvasContext.clearRect(0, 0, width, height);
         canvasContext.save();
-        canvasContext.moveTo(0, height / 2);
+        // Note: move a bit out of bounds (-1 in each direction) to make the tile perfect
+        canvasContext.moveTo(-1, height / 2);
         canvasContext.beginPath();
         for (let i = 0; i < L.pos.length; i++) {
-            canvasContext.lineTo(i, height / 2 + L.pos[i]);
+            canvasContext.lineTo(drawABitOutOfBounds(i, L), height / 2 + L.pos[i]);
         }
-        canvasContext.lineTo(width, height);
-        canvasContext.lineTo(0, height);
+        canvasContext.lineTo(width + 1, height + 1);
+        canvasContext.lineTo(-1, height + 1);
         canvasContext.fillStyle = "#FFFFFF";
         canvasContext.closePath();
         canvasContext.fill();

@@ -273,8 +273,8 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     EnvironmentComponent.spriteMotion(this.background2, this.tickerPosition, this.bgCalcSize, false, 0.8);
     EnvironmentComponent.spriteMotion(this.background, this.tickerPosition, this.bgCalcSize, true, 0.8);
 
-    EnvironmentComponent.spriteMotion(this.background3, this.tickerPosition, this.bgCalcSize, false, 0.8);
-    EnvironmentComponent.spriteMotion(this.background4, this.tickerPosition, this.bgCalcSize, true, 0.8);
+    EnvironmentComponent.spriteMotion(this.background3, this.tickerPosition, this.bgCalcSize, false, 0.6);
+    EnvironmentComponent.spriteMotion(this.background4, this.tickerPosition, this.bgCalcSize, true, 0.6);
 
     EnvironmentComponent.spriteMotion(this.foreground2, this.tickerPosition, this.fgCalcSize, false, 1.2);
     EnvironmentComponent.spriteMotion(this.foreground, this.tickerPosition, this.fgCalcSize, true, 1.2);

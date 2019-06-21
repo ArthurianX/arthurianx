@@ -43,6 +43,8 @@ export class TerrainCreatorComponent implements OnInit {
           this.terrainSettings.octaves ? this.terrainSettings.octaves : undefined,
       );
     } else {
+      this.terrainContainerRef.nativeElement.width = this.terrainSettings.width;
+      this.terrainContainerRef.nativeElement.height = this.terrainSettings.height;
       TerrainGenerator.drawLine(
           {pos: this.drawPoints.pos.reverse()},
           this.terrainContainerRef.nativeElement.getContext('2d'),
@@ -57,11 +59,20 @@ export class TerrainCreatorComponent implements OnInit {
 
   }
 
-
-  perlinGeneratedCanvas($event: PIXI.Sprite) {
+  public perlinGeneratedCanvas($event: PIXI.Sprite) {
     const tSprite = new Sprite(PIXI.Texture.from(this.terrainContainerRef.nativeElement,
         { width: this.terrainSettings.width, height: this.terrainSettings.height}
     ));
     this.generatedMultiTerrain.emit([tSprite, $event]);
+  }
+
+  public isCanvasBlank(canvas) {
+    const context = canvas.getContext('2d');
+
+    const pixelBuffer = new Uint32Array(
+        context.getImageData(0, 0, canvas.width, canvas.height).data.buffer
+    );
+
+    return !pixelBuffer.some(color => color !== 0);
   }
 }
