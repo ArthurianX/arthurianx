@@ -113,8 +113,8 @@ export class DialSceneComponent implements OnInit {
   }
 
   public initLayers() {
-    this.layers.background = new PIXI.Container();
-    // this.renderer.pixi.worldStage.addChild(this.layers.background);
+    this.layers.frontHills = new PIXI.Container();
+    // this.renderer.pixi.worldStage.addChild(this.layers.frontHills);
   }
 
   public initSound(resources) {
@@ -178,7 +178,7 @@ export class DialSceneComponent implements OnInit {
     //     this.dials['ldial' + j].pivot.x = this.dials['ldial' + j].width / 2;
     //     this.dials['ldial' + j].pivot.y = this.dials['ldial' + j].height / 2;
     //
-    //     this.layers.background.addChild(this.dials['ldial' + j]);
+    //     this.layers.frontHills.addChild(this.dials['ldial' + j]);
     //
     //     j++;
     //   }
@@ -216,7 +216,7 @@ export class DialSceneComponent implements OnInit {
       if (this.dialsLoaded) {
         // console.log('this.dialsLoaded', this.dials);
         this.dials.ldial3.rotation += 0.05;
-        // this.renderer.pixi.renderer.render(this.layers.background);
+        // this.renderer.pixi.renderer.render(this.layers.frontHills);
         this.renderer.pixi.renderer.render(this.mainStage);
       }
     };
@@ -239,7 +239,7 @@ export class DialSceneComponent implements OnInit {
 
     if (this.dialsLoaded) {
       this.dials.ldial3.rotation += 0.05;
-      // this.renderer.pixi.renderer.render(this.layers.background);
+      // this.renderer.pixi.renderer.render(this.layers.frontHills);
       // this.renderer.pixi.renderer.render(this.mainStage);
     }
 

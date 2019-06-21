@@ -45,7 +45,7 @@
   height: 100%;
   z-index: 5;
 
-  .mouse {
+  .mouse, .pause {
     position: absolute;
     box-sizing: border-box;
     left: 17px;
@@ -95,6 +95,17 @@
 
     a {
       margin: 10px;
+    }
+  }
+
+  .pause {
+    top: 58%;
+    border-radius: 15px;
+    border: 0px solid #000;
+    pointer-events: all;
+    cursor: pointer;
+    svg:hover {
+      opacity: 0.6;
     }
   }
 

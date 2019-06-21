@@ -27,7 +27,9 @@ import * as PixiPlugin_ from 'gsap/PixiPlugin';
 const PixiPlugin = PixiPlugin_;
 import { Subject } from 'rxjs';
 import { throttleTime } from 'rxjs/operators';
-import { TerrainGen } from '../../interfaces/environment.interface';
+import { EnvironmentSwitcher, TerrainGen } from '../../interfaces/environment.interface';
+
+import {GlitchFilter, PixelateFilter, AsciiFilter, AdvancedBloomFilter, DropShadowFilter} from 'pixi-filters';
 
 
 @Component({
@@ -44,34 +46,22 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   @Output() public envReady: EventEmitter<any> = new EventEmitter();
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
   @ViewChild('clouds', {static: true}) cloudsContainerRef: ElementRef;
-  @ViewChild('sun', {static: true}) sunContainerRef: ElementRef;
 
   public loadingPercentage: number;
   public loading: boolean;
-  public tickerStreamData: Subject<any> = new Subject();
+  public tickerLoop: Subject<any> = new Subject();
   public tickerState: {
-    lastMonth: 'Jan';
     month: 'Jan';
-    lastYear: 1985;
     year: 1985;
   } = {
-    lastMonth: 'Jan',
     month: 'Jan',
-    lastYear: 1985,
     year: 1985
   };
 
   public accoef = 0; // Acceleration Coefficient.
   public outsideTickerAnimationDuration = 3; // Animations outside
 
-  public visible: {
-    sky: boolean;
-    sun: boolean;
-    clouds: boolean;
-    hills: boolean;
-    road: boolean;
-    months: boolean
-  } = {
+  public visible: EnvironmentSwitcher = {
     sky: true,
     sun: true,
     clouds: true,
@@ -80,12 +70,21 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     months: true
   };
 
-  public background: PIXI.Sprite;
-  public background2: PIXI.Sprite;
-  public background3: PIXI.Sprite;
-  public background4: PIXI.Sprite;
-  public foreground: PIXI.Sprite;
-  public foreground2: PIXI.Sprite;
+  /* Filters */
+  public fgFilter: GlitchFilter | AsciiFilter | any;
+  public dShadow: DropShadowFilter = new DropShadowFilter();
+  public aBloom: any;
+  /* Filters*/
+
+  public frontHills: PIXI.Sprite;
+  public frontHills1: PIXI.Sprite;
+  public backHills: PIXI.Sprite;
+  public backHills1: PIXI.Sprite;
+  public soil: PIXI.Sprite;
+  public soil1: PIXI.Sprite;
+  public yearWidth = 70;
+  public year: PIXI.Text;
+  public year2: PIXI.Text;
   public months: PIXI.Sprite;
   public months2: PIXI.Sprite;
   public sky: PIXI.TilingSprite;
@@ -94,42 +93,27 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   public sun: PIXI.Graphics | PIXI.Sprite;
   public sun2: PIXI.Graphics | PIXI.Sprite;
   public clouds: PIXI.Graphics[] = [];
-  public cloudsMovementCoefficient: number[] = [];
+  public cloudMotion: number[] = [];
 
   public monthsList = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-  public foregroundRealSize = [3708, 545];
-  public backgroundRealSize = [6000, 500]; // to be deleted
-  public monthsRealSize = [6000, 500];
-  public combinedHeight = 1500;
-  public foregroundTerrain: PIXI.Sprite;
-  public foregroundTerrain1: PIXI.Sprite;
-  public foregroundTerrainSettings: TerrainGen = {
-    width: 6000,
-    height: 700,
-    amplitude: 128,
-    wavelength: 128,
-    octaves: 2
-  };
+  public soilTileSize = [3708, 545]; // Soil tile size
+  public monthsTileSize = [6000, 500];
+  public combinedHeight = 1500; // TODO: How do I handle this ?
 
-  public backgroundTerrain: PIXI.Sprite;
-  public backgroundTerrain1: PIXI.Sprite;
-  public backgroundTerrainSettings: TerrainGen = {
-    width: 6000,
-    height: 700,
-    amplitude: 128,
-    wavelength: 128,
-    octaves: 2
-  };
+  public backHillsSettings: TerrainGen = {
+    width: 6000, height: 700,
+    amplitude: 128, wavelength: 128, octaves: 2 };
+  public frontHillsSettings: TerrainGen = {
+    width: 6000, height: 700,
+    amplitude: 128, wavelength: 128, octaves: 2 };
 
-  public bgCalcSize = [];
-  public fgCalcSize = [];
-  public mtCalcSize = [];
+  public hillSizes = [];
+  public soilSizes = [];
+  public monthsSizes = [];
 
-  public pixie: any;
-  public tickerPosition = 0;
-  public pixi: {
-    app?: PIXI.Application
-  } = {};
+  public pixieSpineDemo: PIXI.spine.Spine;
+  public ticker = 0;
+  public app: PIXI.Application;
 
   private innerWidth: number;
   private innerHeight: number;
@@ -162,16 +146,17 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     if (changes.speed && changes.speed.currentValue) {
       this.accoef = changes.speed.currentValue * 3;
       // TODO: Formulate a better speed setting
-      this.outsideTickerAnimationDuration = (3 - changes.speed.currentValue);
+      // this.outsideTickerAnimationDuration = (3 - changes.speed.currentValue);
     }
   }
 
   ngAfterViewInit() {
-    // if ((this.pixi.app.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
-    //   this.pixi.app.loader.use(PIXI.spine.AtlasParser.use);
+
+    // if ((this.app.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
+    //   this.app.loader.use(PIXI.spine.AtlasParser.use);
     // }
 
-    this.pixi.app = new PIXI.Application({
+    this.app = new PIXI.Application({
       width: this.innerWidth,
       height: this.innerHeight,
       view: this.bgContainerRef.nativeElement,
@@ -183,33 +168,33 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.initWorld();
 
     // Change the month with GSAP
-    this.tickerStreamData
+    this.tickerLoop
         .pipe(
             throttleTime(500)
         )
         .subscribe((res) => {
           // console.log('Ticker Stream', res);
+          // this.fgFilter.refresh();
+
           const monthPixels = res.width / 12;
-          let month;
+          // TODO: Figure out how we're going in reverse !?!? second param to adjustSeason
           if (res.x > 0) {
-            month = this.monthsList[12 - Math.ceil(res.x / monthPixels)];
+            this.adjustSeason(this.monthsList[12 - Math.ceil(res.x / monthPixels)]);
           } else {
-            month = this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))];
+            this.adjustSeason(this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))]);
           }
-          if (month) {
-            this.adjustSeason(month);
-          }
+
         });
   }
 
   public initWorld() {
-    this.pixi.app.stage.interactive = true;
+    this.app.stage.interactive = true;
 
-    this.pixi.app.stop();
+    this.app.stop();
 
     this.loadAssets();
 
-    this.pixi.app.ticker.add(this.PIXIticker.bind(this));
+    this.app.ticker.add(this.PIXIticker.bind(this));
   }
 
   public loadAssets() {
@@ -217,7 +202,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     // const loader = new PIXI.Loader;
     if ((loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
       console.log('Atlas Parser not present');
-      this.pixi.app.loader.use(PIXI.spine.AtlasParser.use);
+      this.app.loader.use(PIXI.spine.AtlasParser.use);
     }
 
     loader
@@ -235,6 +220,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         .add('sky5', 'assets/story/sky/sky5.jpg')
         .add('sun', 'assets/story/sky/sun.png')
         .add('sun2', 'assets/story/sky/sun.png')
+        .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
         .add('ground', 'assets/story/soil/soil-tile.png')
         .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
         .load(this.assetsLoaded.bind(this));
@@ -247,56 +233,69 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     // TODO: Order is really important here, last in > first on top.
     this.containersSky(res);
-    this.containersTerrain();
+    this.containersHillsSetup(res);
     this.containersGround(res);
     this.containersSun(res);
     this.containersMonths(res);
+    this.containersYear(res);
     this.containersClouds();
-    this.containersRunner(res); // to be deleted
+    // this.containersRunner(res); // to be deleted
 
     // Resize everything put on stage
     this.resizeAssets();
 
+    this.applyFiltersToSprites();
 
-    this.pixi.app.stage.on('pointerdown', this.onTouchStart);
 
-    this.pixi.app.start();
+    this.app.stage.on('pointerdown', this.onTouchStart);
+
+    // this.introEnvironment();
+
+    this.app.start();
 
     // Call out the component to announce readiness of pixi app.
     setTimeout(() => { this.envReady.emit(true); }, 500);
   }
 
   public PIXIticker(time) {
-    this.tickerPosition += this.accoef; // Position is shifted by an acceleration coefficient.
+    this.ticker += this.accoef; // Position is shifted by an acceleration coefficient.
 
     // Background spacing on x axis happens in relation to the layers calculated widths
-    EnvironmentComponent.spriteMotion(this.background2, this.tickerPosition, this.bgCalcSize, false, 0.8);
-    EnvironmentComponent.spriteMotion(this.background, this.tickerPosition, this.bgCalcSize, true, 0.8);
+    EnvironmentComponent.spriteMotion(this.frontHills1, this.ticker, this.hillSizes, false, 0.8);
+    EnvironmentComponent.spriteMotion(this.frontHills, this.ticker, this.hillSizes, true, 0.8);
 
-    EnvironmentComponent.spriteMotion(this.background3, this.tickerPosition, this.bgCalcSize, false, 0.6);
-    EnvironmentComponent.spriteMotion(this.background4, this.tickerPosition, this.bgCalcSize, true, 0.6);
+    EnvironmentComponent.spriteMotion(this.backHills, this.ticker, this.hillSizes, false, 0.6);
+    EnvironmentComponent.spriteMotion(this.backHills1, this.ticker, this.hillSizes, true, 0.6);
 
-    EnvironmentComponent.spriteMotion(this.foreground2, this.tickerPosition, this.fgCalcSize, false, 1.2);
-    EnvironmentComponent.spriteMotion(this.foreground, this.tickerPosition, this.fgCalcSize, true, 1.2);
+    EnvironmentComponent.spriteMotion(this.soil1, this.ticker, this.soilSizes, false, 1.2);
+    EnvironmentComponent.spriteMotion(this.soil, this.ticker, this.soilSizes, true, 1.2);
 
-    EnvironmentComponent.spriteMotion(this.months2, this.tickerPosition, this.mtCalcSize);
-    EnvironmentComponent.spriteMotion(this.months, this.tickerPosition, this.mtCalcSize, true);
+    EnvironmentComponent.spriteMotion(this.months2, this.ticker, this.monthsSizes);
+    EnvironmentComponent.spriteMotion(this.months, this.ticker, this.monthsSizes, true);
+    // Has to have width of months.
+    EnvironmentComponent.spriteMotion(this.year, this.ticker, [this.monthsSizes[0], this.monthsSizes[1]]);
+    EnvironmentComponent.spriteMotion(this.year2, this.ticker, [this.monthsSizes[0], this.monthsSizes[1]], true);
 
     this.clouds.map((cloud, idx) => {
       // TODO Maybe also show two sets of clouds, to be more continuous
       // Push the clouds and the random generated movement coefficient
-      EnvironmentComponent.spriteMotion(cloud, this.tickerPosition, [2700, 0], false, this.cloudsMovementCoefficient[idx]);
+      EnvironmentComponent.spriteMotion(cloud, this.ticker, [2700, 0], false, this.cloudMotion[idx]);
     });
 
-    EnvironmentComponent.spriteMotion(this.sun, this.tickerPosition, [this.innerWidth + 280, 0], false, 0.4);
-    EnvironmentComponent.spriteMotion(this.sun2, this.tickerPosition, [this.innerWidth + 280, 0], true, 0.4);
+    EnvironmentComponent.spriteMotion(this.sun, this.ticker, [this.innerWidth + 280, 0], false, 0.4);
+    EnvironmentComponent.spriteMotion(this.sun2, this.ticker, [this.innerWidth + 280, 0], true, 0.4);
 
-    this.updateTickerState(this.months.width, this.months.scale, this.months.x, this.months.position)
+    this.tickerLoop.next({
+      width: this.months.width,
+      scale: this.months.scale,
+      x: this.months.x,
+      position: this.months.position
+    });
   }
 
   public resizeAssets() {
     // Set renderer devicePixelRatio size
-    this.renderer = this.pixi.app.renderer;
+    this.renderer = this.app.renderer;
     this.renderer.resolution = window.devicePixelRatio;
 
     // Don't know what this is for
@@ -308,47 +307,47 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     this.renderer.plugins.interaction.resolution = window.devicePixelRatio;
 
-    console.log('resizeAssets', this.pixie, this.foreground, this.background, this.months2);
+    console.log('resizeAssets', this.pixieSpineDemo, this.soil, this.frontHills, this.months2);
 
     // Pixie Stuff
-    const scale = 0.3;
-    this.pixie.x = 1024 / 5;
-    this.pixie.y = 500;
-    this.pixie.scale.x = this.pixie.scale.y = scale;
+    // const scale = 0.3;
+    // this.pixieSpineDemo.x = 1024 / 5;
+    // this.pixieSpineDemo.y = 500;
+    // this.pixieSpineDemo.scale.x = this.pixieSpineDemo.scale.y = scale;
 
     // TODO: Refactor the logic here, it's crappy.
     // Foreground / Background
-    const bgSize = this.calculateAssetSize(this.foregroundTerrainSettings.height, this.foregroundTerrainSettings.width / this.foregroundTerrainSettings.height);
-    this.bgCalcSize = [bgSize.width, bgSize.height];
-    const fgSize = this.calculateAssetSize(this.foregroundRealSize[1], this.foregroundRealSize[0] / this.foregroundRealSize[1]);
-    this.fgCalcSize = [fgSize.width, fgSize.height];
+    const bgSize = this.calculateAssetSize(this.backHillsSettings.height, this.backHillsSettings.width / this.backHillsSettings.height);
+    this.hillSizes = [bgSize.width, bgSize.height];
+    const fgSize = this.calculateAssetSize(this.soilTileSize[1], this.soilTileSize[0] / this.soilTileSize[1]);
+    this.soilSizes = [fgSize.width, fgSize.height];
 
-    const mtSize = this.calculateAssetSize(this.monthsRealSize[1], this.monthsRealSize[0] / this.monthsRealSize[1]);
-    this.mtCalcSize = [mtSize.width, mtSize.height];
+    const mtSize = this.calculateAssetSize(this.monthsTileSize[1], this.monthsTileSize[0] / this.monthsTileSize[1]);
+    this.monthsSizes = [mtSize.width, mtSize.height];
 
-    this.sky.width = this.pixi.app.stage.width;
-    this.sky.height = this.pixi.app.stage.height;
-    this.sky1.width = this.pixi.app.stage.width;
-    this.sky1.height = this.pixi.app.stage.height;
+    this.sky.width = this.app.stage.width;
+    this.sky.height = this.app.stage.height;
+    this.sky1.width = this.app.stage.width;
+    this.sky1.height = this.app.stage.height;
 
-    this.background.width = bgSize.width;
-    this.background.height = bgSize.height;
-    this.background2.width = bgSize.width;
-    this.background2.height = bgSize.height;
-    this.background3.width = bgSize.width;
-    this.background3.height = bgSize.height;
-    this.background4.width = bgSize.width;
-    this.background4.height = bgSize.height;
+    this.frontHills.width = bgSize.width;
+    this.frontHills.height = bgSize.height;
+    this.frontHills1.width = bgSize.width;
+    this.frontHills1.height = bgSize.height;
+    this.backHills.width = bgSize.width;
+    this.backHills.height = bgSize.height;
+    this.backHills1.width = bgSize.width;
+    this.backHills1.height = bgSize.height;
 
-    this.background.anchor.set(0, 0.7);
-    this.background2.anchor.set(0, 0.7);
-    this.background3.anchor.set(0, 0.9);
-    this.background4.anchor.set(0, 0.9);
+    this.frontHills.anchor.set(0, 0.7);
+    this.frontHills1.anchor.set(0, 0.7);
+    this.backHills.anchor.set(0, 0.9);
+    this.backHills1.anchor.set(0, 0.9);
 
-    this.background.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
-    this.background2.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
-    this.background3.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
-    this.background4.position.y = (this.pixi.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.frontHills.position.y = (this.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.frontHills1.position.y = (this.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.backHills.position.y = (this.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
+    this.backHills1.position.y = (this.app.screen.height / 3 ) * 2.1 / window.devicePixelRatio;
 
     this.months.width = mtSize.width;
     this.months.height = mtSize.height;
@@ -362,78 +361,118 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.months2.position.y = this.months.height;
 
     // FOREGROUND (soil, ground) dimensions
-    this.foreground.width = fgSize.width;
-    this.foreground.height = fgSize.height;
-    this.foreground2.width = fgSize.width;
-    this.foreground2.height = fgSize.height;
+    this.soil.width = fgSize.width;
+    this.soil.height = fgSize.height;
+    this.soil1.width = fgSize.width;
+    this.soil1.height = fgSize.height;
 
 
-    this.foreground.anchor.set(0, 0.8);
-    this.foreground2.anchor.set(0, 0.8);
+    this.soil.anchor.set(0, 0.8);
+    this.soil1.anchor.set(0, 0.8);
     // Set it at the bottom of the screen
-    this.foreground.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
-    this.foreground2.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
+    this.soil.position.y = this.app.screen.height / window.devicePixelRatio;
+    this.soil1.position.y = this.app.screen.height / window.devicePixelRatio;
+
+    this.sun.scale.x = 1 / window.devicePixelRatio;
+    this.sun.scale.y = 1 / window.devicePixelRatio;
+    this.sun2.scale.x = 1 / window.devicePixelRatio;
+    this.sun2.scale.y = 1 / window.devicePixelRatio;
+
+    this.clouds.map((cloud) => {
+      cloud.scale.x = 1 / window.devicePixelRatio;
+      cloud.scale.y = 1 / window.devicePixelRatio;
+      cloud.position.y /= window.devicePixelRatio;
+    });
   }
 
   public receiveTerrain(background: 'foreground' | 'background', $event: PIXI.Sprite[]) {
     console.log('receiveTerrain for ', background, $event);
     switch (background) {
       case 'background':
-        this.backgroundTerrain = $event[1];
-        this.backgroundTerrain1 = $event[0];
+        this.frontHills = $event[1];
+        this.frontHills1 = $event[0];
         break;
       case 'foreground':
-        this.foregroundTerrain = $event[1];
-        this.foregroundTerrain1 = $event[0];
+        this.backHills = $event[1];
+        this.backHills1 = $event[0];
         break;
     }
   }
 
-  private containersTerrain() {
-    // TODO: Do something about the way we receive and apply the hills
-    this.background = this.backgroundTerrain;
-    this.background2 = this.backgroundTerrain1;
-    this.background3 = this.foregroundTerrain;
-    this.background4 = this.foregroundTerrain1;
+  private containersHillsSetup(res: any) {
     // Initial tint
-    this.background.tint = 0x5BAF5D;
-    this.background2.tint = 0x5BAF5D;
-    this.background3.tint = 0x509B50;
-    this.background4.tint = 0x509B50;
+    this.frontHills.tint = 0x5BAF5D;
+    this.frontHills1.tint = 0x5BAF5D;
+    this.backHills.tint = 0x509B50;
+    this.backHills1.tint = 0x509B50;
     // Flip the second tile sprite, to match the first
-    // this.background2.scale.x *= -1;
-    // this.background4.scale.x *= -1;
+    // this.frontHills1.scale.x *= -1;
+    // this.backHills1.scale.x *= -1;
+
+    // NOTE: POSSIBLE PERFORMANCE HOG - Displacement maps
+    const displacementSprite = PIXI.Sprite.from(res.displacement_map.url);
+
+    displacementSprite.texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT;
+    const displacementFilter = new PIXI.filters.DisplacementFilter(displacementSprite);
+    displacementFilter.padding = 10;
+
+    displacementSprite.position = this.backHills.position;
+
+    // this.app.stage.addChild(displacementSprite);
+
+    this.backHills.filters = [displacementFilter];
+    this.backHills1.filters = [displacementFilter];
+    // NOTE: ^ POSSIBLE PERFORMANCE HOG - Displacement maps
 
     if (this.visible.hills) {
-      this.pixi.app.stage.addChild(this.background3, this.background4, this.background, this.background2);
+      this.app.stage.addChild(this.backHills, this.backHills1, this.frontHills, this.frontHills1);
     }
   }
 
   private containersGround(res: any) {
-    this.foreground = PIXI.Sprite.from(res.ground.url);
-    this.foreground2 = PIXI.Sprite.from(res.ground.url);
+    this.soil = PIXI.Sprite.from(res.ground.url);
+    this.soil1 = PIXI.Sprite.from(res.ground.url);
+
+    // NOTE: POSSIBLE PERFORMANCE HOG - Displacement maps
+    const displacementSprite = PIXI.Sprite.from(res.displacement_map.url);
+
+    displacementSprite.texture.baseTexture.wrapMode = PIXI.WRAP_MODES.REPEAT;
+    const displacementFilter = new PIXI.filters.DisplacementFilter(displacementSprite);
+    displacementFilter.padding = 10;
+
+    displacementSprite.position = this.soil.position;
+
+    this.app.stage.addChild(displacementSprite);
+
+
+    this.soil.filters = [displacementFilter];
+    this.soil1.filters = [displacementFilter];
+    // NOTE: ^ POSSIBLE PERFORMANCE HOG - Displacement maps
+
+    this.soil.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
+    this.soil1.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
 
     if (this.visible.road) {
-      this.pixi.app.stage.addChild(this.foreground, this.foreground2);
+      this.app.stage.addChild(this.soil, this.soil1);
     }
   }
 
   private containersRunner(res: any) {
     const spineData = res.pixie.spineData;
 
-    this.pixie = new PIXI.spine.Spine(spineData);
+    this.pixieSpineDemo = new PIXI.spine.Spine(spineData);
 
-    this.pixi.app.stage.addChild(this.pixie);
+    this.app.stage.addChild(this.pixieSpineDemo);
 
-    this.pixie.stateData.setMix('running', 'jump', 0.2);
-    this.pixie.stateData.setMix('jump', 'running', 0.4);
+    this.pixieSpineDemo.stateData.setMix('running', 'jump', 0.2);
+    this.pixieSpineDemo.stateData.setMix('jump', 'running', 0.4);
 
-    this.pixie.state.setAnimation(0, 'running', true);
+    this.pixieSpineDemo.state.setAnimation(0, 'running', true);
 
-    // this.pixie.anchor.set(0, 1);
+    // this.pixieSpineDemo.anchor.set(0, 1);
     setTimeout(() => {
-      this.pixie.transform.position.y = this.pixi.app.screen.height / window.devicePixelRatio - 50;
-      this.pixie.transform.position.x = this.pixi.app.screen.width / window.devicePixelRatio / 2.6;
+      this.pixieSpineDemo.transform.position.y = this.app.screen.height / window.devicePixelRatio - 50;
+      this.pixieSpineDemo.transform.position.x = this.app.screen.width / window.devicePixelRatio / 2.6;
     }, 200);
 
     this.applyFilters();
@@ -444,8 +483,41 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.months2 = PIXI.Sprite.from(res.months.url);
 
     if (this.visible.months) {
-      this.pixi.app.stage.addChild(this.months, this.months2);
+      this.app.stage.addChild(this.months, this.months2);
     }
+  }
+
+  private containersYear(res: any) {
+    const style = new PIXI.TextStyle({
+      fontFamily: 'Arial',
+      fontSize: 30,
+      fontStyle: 'normal',
+      fontWeight: 'bold',
+      fill: ['#ffffff'/*, '#ccc'*/], // gradient
+      // stroke: '#4a1850',
+      // strokeThickness: 5,
+      // dropShadow: true,
+      // dropShadowColor: '#000000',
+      // dropShadowBlur: 4,
+      // dropShadowAngle: Math.PI / 6,
+      // dropShadowDistance: 6,
+      // wordWrap: true,
+      // wordWrapWidth: 440,
+    });
+
+    this.year = new PIXI.Text(this.tickerState.year.toString(), style);
+    this.year2 = new PIXI.Text((this.tickerState.year + 1).toString(), style);
+
+    this.year.width = this.yearWidth;
+    this.year2.width = this.yearWidth;
+
+    this.year.y = 20;
+    this.year2.y = 20;
+
+    this.year.anchor.set(0.5, 0);
+    this.year2.anchor.set(0.5, 0);
+
+    this.app.stage.addChild(this.year, this.year2);
   }
 
   private containersClouds() {
@@ -460,25 +532,24 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
       // Push the clouds
       this.clouds.push(ele);
       // Push the cloud movement coefficient
-      this.cloudsMovementCoefficient.push(this.randint(0.6, 1.8));
+      this.cloudMotion.push(this.randint(0.6, 1.8));
     });
 
     if (this.visible.clouds) {
       // Add all the clouds to the scene
-      this.clouds.map((cloud) => this.pixi.app.stage.addChild(cloud));
+      this.clouds.map((cloud) => this.app.stage.addChild(cloud));
     }
   }
 
   private containersSun(res) {
-    // this.sun = new GraphicsSVG(this.sunContainerRef.nativeElement);
     this.sun = PIXI.Sprite.from(res.sun.url);
     this.sun2 = PIXI.Sprite.from(res.sun2.url);
     if (this.visible.sun) {
       const tint = 0xe3eba4;
       this.sun.tint = tint;
       this.sun2.tint = tint;
-      this.pixi.app.stage.addChild(this.sun);
-      this.pixi.app.stage.addChild(this.sun2); // Uncomment
+      this.app.stage.addChild(this.sun);
+      this.app.stage.addChild(this.sun2); // Uncomment
     }
   }
 
@@ -495,19 +566,19 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
      */
     this.sky = new PIXI.TilingSprite(
         this.skiTextures[1],
-        this.pixi.app.screen.width,
-        this.pixi.app.screen.height,
+        this.app.screen.width,
+        this.app.screen.height,
     );
     this.sky1 = new PIXI.TilingSprite(
         this.skiTextures[0],
-        this.pixi.app.screen.width,
-        this.pixi.app.screen.height,
+        this.app.screen.width,
+        this.app.screen.height,
     );
 
     console.log(this.sky);
 
     if (this.visible.sky) {
-      this.pixi.app.stage.addChild(this.sky1, this.sky);
+      this.app.stage.addChild(this.sky1, this.sky);
     }
   }
 
@@ -547,10 +618,10 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         tint = 0xE3EBA4;
         break;
       case 'summer':
-        tint = 0xFF6000;
+        tint = 0xFFD53F;
         break;
       case 'autumn':
-        tint = 0x55E270;
+        tint = 0xC2FFE9;
         break;
       case 'winter':
         tint = 0x41D4E2;
@@ -573,16 +644,16 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         tint1 = 0x00897B;
         break;
       case 'summer':
-        tint = 0x00796B;
-        tint1 = 0x00897B;
+        tint = 0xEB5F0E;
+        tint1 = 0xBF2C0A;
         break;
       case 'autumn':
-        tint = 0x00796B;
-        tint1 = 0x00897B;
+        tint = 0x169C9C;
+        tint1 = 0x1D788C;
         break;
       case 'winter':
-        tint = 0x00796B;
-        tint1 = 0x00897B;
+        tint = 0x7DAAD8;
+        tint1 = 0xbbe5ff;
         break;
       case 'spring2':
         tint = 0x00796B;
@@ -590,10 +661,9 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         break;
     }
 
-    TweenLite.to(bg, this.outsideTickerAnimationDuration, { pixi: { tint }});
-    TweenLite.to(bg1, this.outsideTickerAnimationDuration, { pixi: { tint }});
-    TweenLite.to(bg2, this.outsideTickerAnimationDuration, { pixi: { tint1 }});
-    TweenLite.to(bg3, this.outsideTickerAnimationDuration, { pixi: { tint1 }});
+    TweenLite.to([bg, bg1], this.outsideTickerAnimationDuration, { pixi: { tint: tint1 }});
+    TweenLite.to([bg2, bg3], this.outsideTickerAnimationDuration, { pixi: { tint }});
+    // TweenLite.to([this.soil, this.soil1], this.outsideTickerAnimationDuration, { pixi: { tint: tint1  }});
   }
 
   private calculateAssetSize(assetHeight, ratio) {
@@ -606,13 +676,13 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
   }
 
   private onTouchStart() {
-    this.pixie.state.setAnimation(0, 'jump', false);
-    this.pixie.state.addAnimation(0, 'running', true, 0);
+    this.pixieSpineDemo.state.setAnimation(0, 'jump', false);
+    this.pixieSpineDemo.state.addAnimation(0, 'running', true, 0);
   }
 
   private applyFilters() {
-    // this.pixie.filters = [new PIXI.filters.BlurFilter()];
-    this.pixie.filters = [
+    // this.pixieSpineDemo.filters = [new PIXI.filters.BlurFilter()];
+    this.pixieSpineDemo.filters = [
       // new PIXIGlowFilter(),
       // new PIXINoiseFilter()
     ];
@@ -622,12 +692,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     return Math.random() * (max - min) + min;
   }
 
-  private updateTickerState(width: number, scale: PIXI.IPoint, x: number, position: PIXI.IPoint) {
-    const payload = { width, scale, x, position };
-    this.tickerStreamData.next(payload);
-  }
-
-  private adjustSeason(month) {
+  private adjustSeason(month, reverse = false) {
     if (this.tickerState.month !== month) {
       this.tickerState.month = month;
 
@@ -638,24 +703,87 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         case 'Feb':
           this.colorSunChange('spring2', this.sun, this.sun2);
           this.colorSkyChange('spring2', this.sky, this.sky1);
-          this.colorHillsChange('spring2', this.background, this.background2, this.background3, this.background4);
+          this.colorHillsChange('spring2', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
           break;
         case 'May':
           this.colorSunChange('summer', this.sun, this.sun2);
           this.colorSkyChange('summer', this.sky, this.sky1);
-          this.colorHillsChange('summer', this.background, this.background2, this.background3, this.background4);
+          this.colorHillsChange('summer', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
+
+          // Changing the year now yielded the best results
+          if (reverse) {
+            this.year2.text = (this.tickerState.year - 1).toString();
+          } else {
+            this.year2.text = (this.tickerState.year + 1).toString();
+          }
+          
           break;
         case 'Aug':
           this.colorSunChange('autumn', this.sun, this.sun2);
           this.colorSkyChange('autumn', this.sky, this.sky1);
-          this.colorHillsChange('autumn', this.background, this.background2, this.background3, this.background4);
+          this.colorHillsChange('autumn', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
+
+          // Changing the year now yielded the best results
+          if (reverse) {
+            this.tickerState.year -= 1;
+          } else {
+            this.tickerState.year += 1;
+          }
+
+          this.year.text = (this.tickerState.year).toString();
+          
           break;
         case 'Nov':
           this.colorSunChange('winter', this.sun, this.sun2);
           this.colorSkyChange('winter', this.sky, this.sky1);
-          this.colorHillsChange('winter', this.background, this.background2, this.background3, this.background4);
+          this.colorHillsChange('winter', this.frontHills, this.frontHills1, this.backHills, this.backHills1);
+          break;
+        case 'Dec':
           break;
       }
     }
   }
+
+  public applyFiltersToSprites() {
+
+    // this.fgFilter = new GlitchFilter();
+    // this.fgFilter = new AdvancedBloomFilter();
+    // /this.dShadow = new DropShadowFilter();
+    this.aBloom = new AdvancedBloomFilter(7);
+    console.log('this.fgFilter', this.fgFilter);
+    this.frontHills.filters ? this.frontHills.filters.push(this.dShadow) : this.frontHills.filters = [this.dShadow];
+    this.frontHills1.filters ? this.frontHills1.filters.push(this.dShadow) : this.frontHills1.filters = [this.dShadow];
+    this.backHills.filters ? this.backHills.filters.push(this.dShadow) : this.backHills.filters = [this.dShadow];
+    this.backHills1.filters ? this.backHills1.filters.push(this.dShadow) : this.backHills1.filters = [this.dShadow];
+    this.sun.filters ? this.sun.filters.push(this.dShadow) : this.sun.filters = [this.dShadow];
+    this.sun2.filters ? this.sun2.filters.push(this.dShadow) : this.sun2.filters = [this.dShadow];
+
+    // this.clouds.map((cloud) => {
+    //   cloud.filters = [this.dShadow];
+    // });
+    // this.sky.filters ? this.sky.filters.push(this.fgFilter) : this.sky.filters = [this.fgFilter];
+    // this.sky1.filters ? this.sky1.filters.push(this.fgFilter) : this.sky1.filters = [this.fgFilter];
+    // this.sun.filters ? this.sun.filters.push(this.fgFilter) : this.sun.filters = [this.fgFilter];
+    // this.sun2.filters ? this.sun2.filters.push(this.fgFilter) : this.sun2.filters = [this.fgFilter];
+    // this.soil.filters ? this.soil.filters.push(this.fgFilter) : this.soil.filters = [this.fgFilter];
+    // this.soil1.filters ? this.soil1.filters.push(this.fgFilter) : this.soil1.filters = [this.fgFilter];
+  }
+
+  public introEnvironment() {
+    const pixelate = new PixelateFilter([40, 40]);
+    this.app.stage.filters = [pixelate];
+
+    const values = {
+      x: 40,
+      y: 40
+    };
+
+    setTimeout(() => {
+      TweenLite.to(values, 5, {x: 0, y: 0, roundProps: 'x,y', onUpdate: () => {pixelate.size = [values.x, values.y]; }, onComplete: () => {
+          this.app.stage.filters = [];
+        }});
+    }, 2000);
+  }
+
+
 }

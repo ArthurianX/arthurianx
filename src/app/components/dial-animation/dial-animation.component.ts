@@ -184,4 +184,8 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
     this.animationSpeed = speed;
     this.anim.setSpeed(speed);
   }
+
+    hammerTime() {
+        debugger;
+    }
 }

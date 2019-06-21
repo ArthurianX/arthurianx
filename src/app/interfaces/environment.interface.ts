@@ -6,3 +6,12 @@ export interface TerrainGen {
     wavelength: number;
     octaves: number;
 }
+
+export interface EnvironmentSwitcher {
+    sky: boolean;
+    sun: boolean;
+    clouds: boolean;
+    hills: boolean;
+    road: boolean;
+    months: boolean;
+}

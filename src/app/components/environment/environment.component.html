@@ -4,10 +4,10 @@
 <canvas #pixiBackground id="pixiBackground"></canvas>
 
 <app-terrain-creator
-        [terrainSettings]="foregroundTerrainSettings"
+        [terrainSettings]="backHillsSettings"
         (generatedMultiTerrain)="receiveTerrain('foreground', $event)"></app-terrain-creator>
 <app-terrain-creator
-        [terrainSettings]="backgroundTerrainSettings"
+        [terrainSettings]="frontHillsSettings"
         (generatedMultiTerrain)="receiveTerrain('background', $event)"></app-terrain-creator>
 
 <svg #clouds id="clouds" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
@@ -123,11 +123,4 @@
     <path style="fill:#fff" id="cloud15" class="st0" d="M974.5,136.1c-8.3-11.3-23.4-16.3-35.8-9.8c-1.5-11.5-12.1-21.4-23.7-21.1S893,116.7,895.3,128
         c-15.5-9.8-38.5-6.1-50.1,8c22,0,26.5,4.1,35,4.4c8.5,0.3,16.9-0.3,25.3,0.6c7.5,0.8,15.7,2.6,22.2-1.1c3.3,0.3,6.7,0.4,10,0.4
         l7.1-0.3l10.7-0.4c2.8-0.1,6.5-2.8,13.4-3.6L974.5,136.1z"/>
-</svg>
-
-<svg #sun id="sun" xmlns="http://www.w3.org/2000/svg" width="228.03" height="228.03" viewBox="0 0 228.03 228.03">
-    <path d="M228,114A114,114,0,1,1,114,0,114,114,0,0,1,228,114Z" style="fill:#fff;opacity:0.23"/>
-    <path d="M208.43,114A94.42,94.42,0,1,1,114,19.6,94.41,94.41,0,0,1,208.43,114Z" style="fill:#fff;opacity:0.23"/>
-    <path d="M185.69,114A71.68,71.68,0,1,1,114,42.34,71.68,71.68,0,0,1,185.69,114Z" style="fill:#fff;opacity:0.23"/>
-    <path d="M171.51,114A57.5,57.5,0,1,1,114,56.52,57.49,57.49,0,0,1,171.51,114Z" style="fill:#fff"/>
 </svg>
