@@ -375,16 +375,19 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.foreground2.position.y = this.pixi.app.screen.height / window.devicePixelRatio;
   }
 
-  public receiveTerrain(background: 'foreground' | 'background', $event: PIXI.Sprite[]) {
-    console.log('receiveTerrain for ', background, $event);
+  public receiveTerrain(background: 'foreground' | 'background' | 'foreground1' | 'background1', $event: PIXI.Sprite) {
     switch (background) {
       case 'background':
-        this.backgroundTerrain = $event[1];
-        this.backgroundTerrain1 = $event[0];
+        this.backgroundTerrain = $event;
+        break;
+      case 'background1':
+        this.backgroundTerrain1 = $event;
         break;
       case 'foreground':
-        this.foregroundTerrain = $event[1];
-        this.foregroundTerrain1 = $event[0];
+        this.foregroundTerrain = $event;
+        break;
+      case 'foreground1':
+        this.foregroundTerrain1 = $event;
         break;
     }
   }
