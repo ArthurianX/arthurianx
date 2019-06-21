@@ -32,8 +32,9 @@ export class TerrainCreatorComponent implements OnInit {
 
   ngOnInit(): void {
 
-    // NOTE: Generate the first noise on canvas, and save the generated Perlin Points to a constant
+
     if (!this.drawPoints) {
+      // NOTE: Generate the first noise on canvas, and save the generated Perlin Points to a constant
       this.perlinPoints = new TerrainGenerator(
           this.terrainContainerRef,
           this.terrainSettings.width,
@@ -43,6 +44,7 @@ export class TerrainCreatorComponent implements OnInit {
           this.terrainSettings.octaves ? this.terrainSettings.octaves : undefined,
       );
     } else {
+      // NOTE: Draw points already exists, so we will create a new recursive component with the existing points
       this.terrainContainerRef.nativeElement.width = this.terrainSettings.width;
       this.terrainContainerRef.nativeElement.height = this.terrainSettings.height;
       TerrainGenerator.drawLine(
@@ -66,6 +68,7 @@ export class TerrainCreatorComponent implements OnInit {
     this.generatedMultiTerrain.emit([tSprite, $event]);
   }
 
+  // Helper function to see if we've drawn something on the canvas
   public isCanvasBlank(canvas) {
     const context = canvas.getContext('2d');
 
