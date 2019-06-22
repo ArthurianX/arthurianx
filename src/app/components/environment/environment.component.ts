@@ -25,28 +25,28 @@ import {
 } from 'gsap';
 import * as PixiPlugin_ from 'gsap/PixiPlugin';
 const PixiPlugin = PixiPlugin_;
-import { Subject } from 'rxjs';
-import { throttleTime } from 'rxjs/operators';
+import { forkJoin, of, Subject, zip } from 'rxjs';
+import { catchError, map, throttleTime } from 'rxjs/operators';
 import { EnvironmentSwitcher, TerrainGen } from '../../interfaces/environment.interface';
 
 import {GlitchFilter, PixelateFilter, AsciiFilter, AdvancedBloomFilter, DropShadowFilter} from 'pixi-filters';
 
-
 @Component({
-  selector: 'app-environment',
+  // tslint:disable-next-line:component-selector
+  selector: 'environment',
   templateUrl: './environment.component.html',
   styleUrls: ['./environment.component.sass']
 })
-export class EnvironmentComponent implements AfterViewInit, OnChanges {
-    constructor() {
-    this.innerWidth = window.innerWidth;
-    this.innerHeight = window.innerHeight;
-  }
+export class EnvironmentComponent implements OnChanges, OnInit {
+  // NOTE: App and ticker are received from above.
+  @Input() public app: PIXI.Application;
+
   @Input() public speed: number;
   @Output() public envReady: EventEmitter<any> = new EventEmitter();
-  @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
   @ViewChild('clouds', {static: true}) cloudsContainerRef: ElementRef;
 
+  public readyApp: Subject<PIXI.Application> = new Subject();
+  public readyAssets: Subject<any> = new Subject();
   public loadingPercentage: number;
   public loading: boolean;
   public tickerLoop: Subject<any> = new Subject();
@@ -67,7 +67,8 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     clouds: true,
     hills: true,
     road: true,
-    months: true
+    months: true,
+    year: true
   };
 
   /* Filters */
@@ -113,7 +114,6 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
   public pixieSpineDemo: PIXI.spine.Spine;
   public ticker = 0;
-  public app: PIXI.Application;
 
   private innerWidth: number;
   private innerHeight: number;
@@ -127,7 +127,6 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     // If this is the tile, set its position right after the first sprite and move
     sprite.x += tile ? size[0] : 0;
 
-    // TODO: Don't know exactly what happens here, maybe reseting the tile ?
     sprite.x %= size[0] * 2;
     if (sprite.x < 0) {
       sprite.x += size[0] * 2;
@@ -142,59 +141,70 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.resizeAssets();
   }
 
+  constructor() {
+    this.innerWidth = window.innerWidth;
+    this.innerHeight = window.innerHeight;
+
+    this.loadAssets();
+
+    const everythingReady = zip(this.readyApp, this.readyAssets);
+    everythingReady.subscribe( ([app, assets]) => {
+      this.appReceived(assets);
+    });
+  }
+
   ngOnChanges(changes: SimpleChanges): void {
     if (changes.speed && changes.speed.currentValue) {
       this.accoef = changes.speed.currentValue * 3;
       // TODO: Formulate a better speed setting
       // this.outsideTickerAnimationDuration = (3 - changes.speed.currentValue);
     }
+    if (changes.app && changes.app.currentValue) {
+      this.readyApp.next(this.app);
+    }
   }
 
-  ngAfterViewInit() {
+  ngOnInit(): void {}
 
-    // if ((this.app.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
-    //   this.app.loader.use(PIXI.spine.AtlasParser.use);
-    // }
+  public appReceived(res) {
 
-    this.app = new PIXI.Application({
-      width: this.innerWidth,
-      height: this.innerHeight,
-      view: this.bgContainerRef.nativeElement,
-      transparent: true,
-      antialias: true,
-      resizeTo: window
-    });
-
-    this.initWorld();
-
+    this.app.ticker.add(this.PIXIticker.bind(this));
     // Change the month with GSAP
-    this.tickerLoop
-        .pipe(
-            throttleTime(500)
-        )
-        .subscribe((res) => {
+    this.tickerLoop.pipe( throttleTime(500) ).subscribe((res) => {
           // console.log('Ticker Stream', res);
           // this.fgFilter.refresh();
 
-          const monthPixels = res.width / 12;
-          // TODO: Figure out how we're going in reverse !?!? second param to adjustSeason
-          if (res.x > 0) {
-            this.adjustSeason(this.monthsList[12 - Math.ceil(res.x / monthPixels)]);
-          } else {
-            this.adjustSeason(this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))]);
-          }
+      const monthPixels = res.width / 12;
+      // TODO: Figure out how we're going in reverse !?!? second param to adjustSeason
+      if (res.x > 0) {
+        this.adjustSeason(this.monthsList[12 - Math.ceil(res.x / monthPixels)]);
+      } else {
+        this.adjustSeason(this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))]);
+      }
 
-        });
-  }
+    });
 
-  public initWorld() {
-    this.app.stage.interactive = true;
+    // TODO: Order is really important here, last in > first on top.
+    this.addOnStage(this.containersSky(res), this.app, 'sky', this.visible);
+    this.addOnStage(this.containersHillsSetup(res), this.app, 'hills', this.visible);
+    this.addOnStage(this.containersGround(res), this.app, 'road', this.visible);
+    this.addOnStage(this.containersSun(res), this.app, 'sun', this.visible);
+    this.addOnStage(this.containersMonths(res), this.app, 'months', this.visible);
+    this.addOnStage(this.containersYear(res), this.app, 'year', this.visible);
+    this.addOnStage(this.containersClouds(), this.app, 'clouds', this.visible);
+    // this.containersRunner(res); // to be deleted
+    // Resize everything put on stage
+    this.resizeAssets();
 
-    this.app.stop();
+    this.applyFiltersToSprites();
 
-    this.loadAssets();
 
-    this.app.ticker.add(this.PIXIticker.bind(this));
+    this.app.stage.on('pointerdown', this.onTouchStart);
+
+    // this.introEnvironment();
+
+    // Call out the component to announce readiness of pixi app.
+    setTimeout(() => { this.envReady.emit(true); }, 500);
   }
 
   public loadAssets() {
@@ -207,10 +217,6 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     loader
         .add('pixie', 'assets/demo-story/pixie/pixie.json')
-        .add('clouds', 'assets/months/clouds.jpg')
-        .add('clouds1', 'assets/months/clouds1.jpg')
-        .add('hills', 'assets/months/hills.png')
-        .add('hills1', 'assets/months/hills1.png')
         .add('months', 'assets/months/months.png')
         // good stuff below
         .add('sky1', 'assets/story/sky/sky1.jpg')
@@ -222,39 +228,17 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
         .add('sun1', 'assets/story/sky/sun.png')
         .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
         .add('ground', 'assets/story/soil/soil-tile.png')
-        .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; })
+        .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; console.log('this.loadingPercentage', this.loadingPercentage);})
         .load(this.assetsLoaded.bind(this));
   }
 
   public assetsLoaded(loader: any, res: any) {
+    console.log('this.loadingPercentage', this.loadingPercentage);
     this.loadingPercentage = Math.floor(loader.progress);
     this.loading = loader.loading;
     console.log('assetsLoaded', loader, res);
 
-    // TODO: Order is really important here, last in > first on top.
-    this.containersSky(res);
-    this.containersHillsSetup(res);
-    this.containersGround(res);
-    this.containersSun(res);
-    this.containersMonths(res);
-    this.containersYear(res);
-    this.containersClouds();
-    // this.containersRunner(res); // to be deleted
-
-    // Resize everything put on stage
-    this.resizeAssets();
-
-    this.applyFiltersToSprites();
-
-
-    this.app.stage.on('pointerdown', this.onTouchStart);
-
-    // this.introEnvironment();
-
-    this.app.start();
-
-    // Call out the component to announce readiness of pixi app.
-    setTimeout(() => { this.envReady.emit(true); }, 500);
+    this.readyAssets.next(res);
   }
 
   public PIXIticker(time) {
@@ -327,12 +311,12 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     // TODO: Refactor the logic here, it's crappy.
     // Foreground / Background
-    const bgSize = this.calculateAssetSize(this.backHillsSettings.height, this.backHillsSettings.width / this.backHillsSettings.height);
+    const bgSize = this.calcHeightBasedOnScreenResolution(this.backHillsSettings.height, this.backHillsSettings.width / this.backHillsSettings.height);
     this.hillSizes = [bgSize.width, bgSize.height];
-    const fgSize = this.calculateAssetSize(this.soilTileSize[1], this.soilTileSize[0] / this.soilTileSize[1]);
+    const fgSize = this.calcHeightBasedOnScreenResolution(this.soilTileSize[1], this.soilTileSize[0] / this.soilTileSize[1]);
     this.soilSizes = [fgSize.width, fgSize.height];
 
-    const mtSize = this.calculateAssetSize(this.monthsTileSize[1], this.monthsTileSize[0] / this.monthsTileSize[1]);
+    const mtSize = this.calcHeightBasedOnScreenResolution(this.monthsTileSize[1], this.monthsTileSize[0] / this.monthsTileSize[1]);
     this.monthsSizes = [mtSize.width, mtSize.height];
 
     this.sky.width = this.app.stage.width;
@@ -441,9 +425,10 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.backHills1.filters = [displacementFilter];
     // NOTE: ^ POSSIBLE PERFORMANCE HOG - Displacement maps
 
-    if (this.visible.hills) {
-      this.app.stage.addChild(this.backHills, this.backHills1, this.frontHills, this.frontHills1);
-    }
+    // if (this.visible.hills) {
+    //   this.app.stage.addChild(this.backHills, this.backHills1, this.frontHills, this.frontHills1);
+    // }
+    return [this.backHills, this.backHills1, this.frontHills, this.frontHills1];
   }
 
   private containersGround(res: any) {
@@ -469,17 +454,17 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.soil.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
     this.soil1.blendMode = PIXI.BLEND_MODES.SOFT_LIGHT;
 
-    if (this.visible.road) {
-      this.app.stage.addChild(this.soil, this.soil1);
-    }
+    // if (this.visible.road) {
+    //   this.app.stage.addChild(this.soil, this.soil1);
+    // }
+
+    return [this.soil, this.soil1];
   }
 
   private containersRunner(res: any) {
     const spineData = res.pixie.spineData;
 
     this.pixieSpineDemo = new PIXI.spine.Spine(spineData);
-
-    this.app.stage.addChild(this.pixieSpineDemo);
 
     this.pixieSpineDemo.stateData.setMix('running', 'jump', 0.2);
     this.pixieSpineDemo.stateData.setMix('jump', 'running', 0.4);
@@ -493,15 +478,19 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     }, 200);
 
     this.applyFilters();
+
+    // this.app.stage.addChild(this.pixieSpineDemo);
+    return [this.pixieSpineDemo];
   }
 
   private containersMonths(res: any) {
     this.months = PIXI.Sprite.from(res.months.url);
     this.months2 = PIXI.Sprite.from(res.months.url);
 
-    if (this.visible.months) {
-      this.app.stage.addChild(this.months, this.months2);
-    }
+    // if (this.visible.months) {
+    //   this.app.stage.addChild(this.months, this.months2);
+    // }
+    return [this.months, this.months2];
   }
 
   private containersYear(res: any) {
@@ -534,40 +523,40 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.year.anchor.set(0.5, 0);
     this.year1.anchor.set(0.5, 0);
 
-    this.app.stage.addChild(this.year, this.year1);
+    // this.app.stage.addChild(this.year, this.year1);
+    return [this.year, this.year1];
   }
 
   private containersClouds() {
-    // Also add the ones as png's
     const clouds = new GraphicsSVG(this.cloudsContainerRef.nativeElement) as any;
     clouds.children[0].children.map((ele) => {
-
-      // ele.tint = Math.random() * 0xFFFFFF;
-      // console.log(ele.getBounds());
       ele.position.y = this.randint(-100, 200);
-
       // Push the clouds
       this.clouds.push(ele);
       // Push the cloud movement coefficient
       this.cloudMotion.push(this.randint(0.6, 1.8));
     });
 
-    if (this.visible.clouds) {
-      // Add all the clouds to the scene
-      this.clouds.map((cloud) => this.app.stage.addChild(cloud));
-    }
+    // if (this.visible.clouds) {
+    //   // Add all the clouds to the scene
+    //   this.clouds.map((cloud) => this.app.stage.addChild(cloud));
+    // }
+    return this.clouds; // It's already an array
   }
 
   private containersSun(res) {
     this.sun = PIXI.Sprite.from(res.sun.url);
     this.sun1 = PIXI.Sprite.from(res.sun1.url);
-    if (this.visible.sun) {
-      const tint = 0xe3eba4;
-      this.sun.tint = tint;
-      this.sun1.tint = tint;
-      this.app.stage.addChild(this.sun);
-      this.app.stage.addChild(this.sun1); // Uncomment
-    }
+    const tint = 0xe3eba4;
+    this.sun.tint = tint;
+    this.sun1.tint = tint;
+
+    // if (this.visible.sun) {
+    //   this.app.stage.addChild(this.sun);
+    //   this.app.stage.addChild(this.sun1);
+    // }
+
+    return [this.sun, this.sun1];
   }
 
   private containersSky(res: any) {
@@ -577,10 +566,7 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     this.skiTextures.push(PIXI.Texture.from(res.sky4.url));
     this.skiTextures.push(PIXI.Texture.from(res.sky5.url));
 
-    /* create a tiling sprite ...
-     * requires a texture, a width and a height
-     * in WebGL the image size should preferably be a power of two
-     */
+    // NOTE: This sky textures are not tiling, they are  on top of each other and appear / disappear to 'fade' between skies.
     this.sky = new PIXI.TilingSprite(
         this.skiTextures[1],
         this.app.screen.width,
@@ -594,9 +580,10 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
 
     console.log(this.sky);
 
-    if (this.visible.sky) {
-      this.app.stage.addChild(this.sky1, this.sky);
-    }
+    // if (this.visible.sky) {
+    //   this.app.stage.addChild(this.sky1, this.sky);
+    // }
+    return [this.sky1, this.sky];
   }
 
   private colorSkyChange(toTexture: 'spring' | 'summer' | 'autumn' | 'winter' | 'spring2', sky, sky1) {
@@ -683,13 +670,15 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
     // TweenLite.to([this.soil, this.soil1], this.outsideTickerAnimationDuration, { pixi: { tint: tint1  }});
   }
 
-  private calculateAssetSize(assetHeight, ratio) {
+  // Calculate height based on screen resolution and device pixel ratio.
+  private calcHeightBasedOnScreenResolution(assetHeight, ratio) {
     const height = this.innerHeight;
     const defaultHeight = this.combinedHeight;
 
     const calcHeight = (height * assetHeight) / defaultHeight;
     const calcWidth = calcHeight * ratio;
     return {width: calcWidth / window.devicePixelRatio, height: calcHeight  / window.devicePixelRatio};
+    //  TODO: This still needs a bit of love for Retina displays.
   }
 
   private onTouchStart() {
@@ -800,6 +789,12 @@ export class EnvironmentComponent implements AfterViewInit, OnChanges {
           this.app.stage.filters = [];
         }});
     }, 2000);
+  }
+
+  private addOnStage(array: any[], app: PIXI.Application, kind: string, allowed) {
+    if (allowed[kind] && app) {
+      array.map( (it) => app.stage.addChild(it));
+    }
   }
 
 

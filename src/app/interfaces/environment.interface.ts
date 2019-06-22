@@ -14,4 +14,5 @@ export interface EnvironmentSwitcher {
     hills: boolean;
     road: boolean;
     months: boolean;
+    year: boolean
 }

@@ -26,6 +26,7 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
 
   @Output() public animComplete = new EventEmitter();
   @Output() public dialSpeed = new EventEmitter();
+  @Output() public pauseApp = new EventEmitter();
 
   @ViewChild('_d', {static: true}) public _d: ElementRef;
 
@@ -185,7 +186,7 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
     this.anim.setSpeed(speed);
   }
 
-    hammerTime() {
-        debugger;
+  hammerTime() {
+        this.pauseApp.emit(true);
     }
 }
