@@ -72,7 +72,7 @@ export class LoadingAnimationComponent implements OnInit, OnDestroy {
         this.anim.triggerEvent('loopComplete');
       }, 1000);
 
-    }, 5500);
+    }, 3500);
 
   }
 }

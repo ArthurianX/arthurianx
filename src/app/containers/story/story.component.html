@@ -1,11 +1,11 @@
 <div>
   <dial-animation *ngIf="showDial" (dialSpeed)="receiveDialSpeed($event)" (pauseApp)="pauseStory($event)"></dial-animation>
   <!-- Canvas for the PIXI Application -->
-  <canvas #pixiBackground id="pixiBackground"></canvas>
-
-  <environment
+  <asset-loader [loader]="loader"></asset-loader>
+  <!--<environment
           [app]="app"
           [speed]="globalSpeed"
           (envReady)="envReady($event)">
   </environment>
+  <canvas #pixiBackground id="pixiBackground"></canvas>-->
 </div>

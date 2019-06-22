@@ -1,4 +1,6 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+
+import { Loader } from 'pixi.js';
 
 @Component({
   selector: 'app-story',
@@ -10,14 +12,24 @@ export class StoryComponent implements OnInit, AfterViewInit {
   public showDial = false;
   public app: PIXI.Application;
   public appRunning = false;
+  public loader: Loader = Loader.shared;
 
+  // PIXI Canvas DOM Element Ref
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
 
-  constructor() { }
+  // Pause the whole app on SPACE press.
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown($event) {
+    if ($event.keyCode === 32) {
+      this.pauseStory($event);
+    }
+  }
+  constructor() {
+    this.loader = PIXI.Loader.shared;
+  }
 
   ngOnInit() {
-    //  Demo Stuff, turn this off and enable dial when done.
-    this.globalSpeed = 0.1;
+    this.globalSpeed = 0.3;
   }
 
   ngAfterViewInit() {
