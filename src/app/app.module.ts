@@ -19,6 +19,7 @@ import { DialSceneComponent } from './components/rotating-dial/dial-scene.compon
 import { RotatingDialComponent } from './components/rotating-dial/rotating-dial.component';
 import { PlayComponent } from './containers/play/play.component';
 import { TerrainCreatorComponent } from './components/terrain-creator/terrain-creator.component';
+import { AtftModule } from 'atft';
 
 @NgModule({
   declarations: [
@@ -42,7 +43,8 @@ import { TerrainCreatorComponent } from './components/terrain-creator/terrain-cr
     ReactiveFormsModule,
     AppRoutingModule,
     LottieAnimationViewModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    AtftModule
   ],
   providers: [],
   bootstrap: [AppComponent]
