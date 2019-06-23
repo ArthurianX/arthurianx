@@ -159,6 +159,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
   }
 
   ngOnInit(): void {
+    // NOTE: Listen for ASSETS and APP being ready to use.
     const everythingReady = zip(this.readyApp, this.assets);
     everythingReady.subscribe( ([app, assets]) => {
       this.appReceived(assets);
