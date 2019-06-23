@@ -1,0 +1,11 @@
+<div *ngIf="!loadingFinished" class="progress-animation"
+     fxFill fxLayout="row"
+     fxLayoutAlign="center center">
+  <lottie-animation-view
+    fxFlex="20"
+    [style.height]="'200px'"
+    [options]="lottieConfig"
+    (animCreated)="handleAnimation($event)">
+  </lottie-animation-view>
+  <span *ngIf="loadingPercentage < 100">{{loadingPercentage}}</span>
+</div>
