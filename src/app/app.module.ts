@@ -5,7 +5,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LottieAnimationViewModule } from 'ng-lottie';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { AtftModule } from 'atft';
+
+import { AtftModule } from './modules/atft/atft.module';
 
 // import {RotatingDialComponent} from "./rotating-dial";
 import { StoryComponent } from './containers/story/story.component';

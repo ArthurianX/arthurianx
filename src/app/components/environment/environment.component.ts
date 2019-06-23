@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 
 import 'pixi-spine';
-import 'pixi-viewport';
 
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 
@@ -25,8 +24,8 @@ import {
 } from 'gsap';
 import * as PixiPlugin_ from 'gsap/PixiPlugin';
 const PixiPlugin = PixiPlugin_;
-import { forkJoin, of, Subject, zip } from 'rxjs';
-import { catchError, map, throttleTime } from 'rxjs/operators';
+import { Subject, zip } from 'rxjs';
+import { throttleTime } from 'rxjs/operators';
 import { EnvironmentSwitcher, TerrainGen } from '../../interfaces/environment.interface';
 
 import {GlitchFilter, PixelateFilter, AsciiFilter, AdvancedBloomFilter, DropShadowFilter} from 'pixi-filters';
