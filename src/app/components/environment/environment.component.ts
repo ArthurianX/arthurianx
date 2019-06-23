@@ -42,11 +42,12 @@ export class EnvironmentComponent implements OnChanges, OnInit {
   @Input() public app: PIXI.Application;
 
   @Input() public speed: number;
+  @Input() public assets: Subject<any>;
   @Output() public envReady: EventEmitter<any> = new EventEmitter();
   @ViewChild('clouds', {static: true}) cloudsContainerRef: ElementRef;
 
   public readyApp: Subject<PIXI.Application> = new Subject();
-  public readyAssets: Subject<any> = new Subject();
+
   public loadingPercentage: number;
   public loading: boolean;
   public tickerLoop: Subject<any> = new Subject();
@@ -144,13 +145,6 @@ export class EnvironmentComponent implements OnChanges, OnInit {
   constructor() {
     this.innerWidth = window.innerWidth;
     this.innerHeight = window.innerHeight;
-
-    this.loadAssets();
-
-    const everythingReady = zip(this.readyApp, this.readyAssets);
-    everythingReady.subscribe( ([app, assets]) => {
-      this.appReceived(assets);
-    });
   }
 
   ngOnChanges(changes: SimpleChanges): void {
@@ -164,7 +158,12 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     }
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    const everythingReady = zip(this.readyApp, this.assets);
+    everythingReady.subscribe( ([app, assets]) => {
+      this.appReceived(assets);
+    });
+  }
 
   public appReceived(res) {
 
@@ -205,40 +204,6 @@ export class EnvironmentComponent implements OnChanges, OnInit {
 
     // Call out the component to announce readiness of pixi app.
     setTimeout(() => { this.envReady.emit(true); }, 500);
-  }
-
-  public loadAssets() {
-    const loader = PIXI.Loader.shared;
-    // const loader = new PIXI.Loader;
-    if ((loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
-      console.log('Atlas Parser not present');
-      this.app.loader.use(PIXI.spine.AtlasParser.use);
-    }
-
-    loader
-        .add('pixie', 'assets/demo-story/pixie/pixie.json')
-        .add('months', 'assets/months/months.png')
-        // good stuff below
-        .add('sky1', 'assets/story/sky/sky1.jpg')
-        .add('sky2', 'assets/story/sky/sky2.jpg')
-        .add('sky3', 'assets/story/sky/sky3.jpg')
-        .add('sky4', 'assets/story/sky/sky4.jpg')
-        .add('sky5', 'assets/story/sky/sky5.jpg')
-        .add('sun', 'assets/story/sky/sun.png')
-        .add('sun1', 'assets/story/sky/sun.png')
-        .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
-        .add('ground', 'assets/story/soil/soil-tile.png')
-        .on('progress', (inst) => { this.loadingPercentage = Math.floor(inst.progress); this.loading = inst.loading; console.log('this.loadingPercentage', this.loadingPercentage);})
-        .load(this.assetsLoaded.bind(this));
-  }
-
-  public assetsLoaded(loader: any, res: any) {
-    console.log('this.loadingPercentage', this.loadingPercentage);
-    this.loadingPercentage = Math.floor(loader.progress);
-    this.loading = loader.loading;
-    console.log('assetsLoaded', loader, res);
-
-    this.readyAssets.next(res);
   }
 
   public PIXIticker(time) {

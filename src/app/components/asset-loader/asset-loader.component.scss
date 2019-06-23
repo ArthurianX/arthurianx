@@ -1,31 +1,16 @@
-@keyframes show-intro {
-  0% {
-    opacity: 0;
-  }
-
-  30%, 80% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0;
-  }
-}
-
 :host {
 
-  .main-logo-animation {
-
-    .intro-text {
-      opacity: 0;
+  .progress-animation {
+    span {
       position: absolute;
-      top: 10%;
-      animation:         show-intro 4s 1 forwards ease-in 1s; /* IE 10+, Fx 29+ */
-      h1 {
-        color: #fff
-      }
+      left: 50%;
+      top: 50%;
+      color: #fff;
+      font-size: 32px;
+      font-family: "Helvetica Neue", arial, sans-serif;
+      margin-left: -20px;
+      margin-top: -46px;
     }
-
   }
 
 }

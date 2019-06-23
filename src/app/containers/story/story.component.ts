@@ -1,6 +1,7 @@
 import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
 
 import { Loader } from 'pixi.js';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-story',
@@ -8,6 +9,7 @@ import { Loader } from 'pixi.js';
   styleUrls: ['./story.component.sass']
 })
 export class StoryComponent implements OnInit, AfterViewInit {
+  public globalAssets: Subject<any[]> = new Subject();
   public globalSpeed: number;
   public showDial = false;
   public app: PIXI.Application;
@@ -60,18 +62,8 @@ export class StoryComponent implements OnInit, AfterViewInit {
   }
 
   public receiveDialSpeed(speed) {
-    /**
-     * This will be the global speed multiplier for all the other looped animations.
-     * */
-
-    // console.log('dialSpeed', speed);
+    /* This will be the global speed multiplier for all the other looped animations. */
     this.globalSpeed = speed;
-  }
-
-  envReady($event: any) {
-      this.showDial = true;
-      this.app.start();
-      this.appRunning = true;
   }
 
   pauseStory($event) {
@@ -82,5 +74,16 @@ export class StoryComponent implements OnInit, AfterViewInit {
       this.app.start();
       this.appRunning = true;
     }
+  }
+
+  allAssetsLoaded($event: any[]) {
+    // All assets have loaded
+    this.globalAssets.next($event);
+  }
+
+  envReady($event: any) {
+    this.showDial = true;
+    this.app.start();
+    this.appRunning = true;
   }
 }

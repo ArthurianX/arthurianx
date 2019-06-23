@@ -9,33 +9,35 @@ import { Loader } from 'pixi.js';
   // tslint:disable-next-line:component-selector
   selector: 'asset-loader',
   styleUrls: [ './asset-loader.component.scss' ],
-  encapsulation: ViewEncapsulation.None,
   templateUrl: './asset-loader.component.html'
 })
 
-export class AssetLoaderComponent implements OnInit, OnDestroy {
+export class AssetLoaderComponent implements OnDestroy {
 
   @Output() public animComplete = new EventEmitter();
   @Output() public loadingComplete: EventEmitter<any[]> = new EventEmitter();
   @Input() public loader: Loader;
 
   public lottieConfig: {};
+  public loadingFinished = false;
   private anim: any;
-  private animationSpeed = 1;
   private loadingPercentage: number;
-  private loading: boolean;
 
   constructor() {
 
     this.lottieConfig = {
-      path: 'assets/animations/progress-bar.json',
+      path: 'assets/animations/checkmark.json',
       autoplay: false,
       loop: false
     };
 
   }
 
-  public ngOnInit() {
+  public ngOnDestroy() {
+    this.anim.removeEventListener('complete');
+  }
+
+  public startLoading() {
     if ((this.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
       console.log('Atlas Parser not present');
       this.loader.use(PIXI.spine.AtlasParser.use);
@@ -55,51 +57,35 @@ export class AssetLoaderComponent implements OnInit, OnDestroy {
         .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
         .add('ground', 'assets/story/soil/soil-tile.png')
         .on('progress', (inst) => {
+          this.playAnimation(Math.floor(inst.progress));
           this.loadingPercentage = Math.floor(inst.progress);
-          this.loading = inst.loading;
-          console.log('this.loadingPercentage', this.loadingPercentage);
+          // console.log('this.loadingPercentage', Math.floor(inst.progress));
         })
         .load(this.loaderComplete.bind(this));
   }
 
-  public ngOnDestroy() {
-    this.anim.removeEventListener('complete');
-  }
-
   public loaderComplete(loader, res) {
     this.loadingComplete.emit(res);
-    this.anim.setSpeed(1);
+    // this.anim.setSpeed(1);
   }
 
   public handleAnimation(anim: any) {
     this.anim = anim;
-    this.anim.addEventListener('loopComplete', (ev) => this.animComplete.emit(true));
-    this.playAnimation(anim);
+    this.anim.addEventListener('complete', (ev) => {
+      console.log('complete');
+      this.loadingFinished = true;
+      // Init destruction
+    });
+    this.startLoading();
   }
 
-  public stop() {
-    this.anim.stop();
-  }
-
-  public play() {
-    this.anim.play();
-  }
-
-  public pause() {
-    this.anim.pause();
-  }
-
-  public setSpeed(speed: number) {
-    this.animationSpeed = speed;
-    this.anim.setSpeed(speed);
-  }
-
-  private playAnimation(anim: any) {
-    console.log('anim', anim);
-    anim.setSpeed(0.1);
-    anim.play();
-    // anim.goToAndPlay(100, true);
-    // anim.playSegments([0, 10], [0, 0]);
-
+  private playAnimation(percent: number) {
+    // 16 is 100%
+    // x is percent param
+    this.anim.goToAndStop(Math.ceil((16 * percent) / 100), true);
+    if (percent === 100) {
+      // Play until the end
+      this.anim.play();
+    }
   }
 }
