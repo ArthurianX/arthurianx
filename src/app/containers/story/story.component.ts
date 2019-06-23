@@ -1,4 +1,7 @@
-import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+
+import { Loader } from 'pixi.js';
+import { Subject } from 'rxjs';
 
 @Component({
   selector: 'app-story',
@@ -6,18 +9,29 @@ import { AfterViewInit, Component, ElementRef, OnInit, ViewChild } from '@angula
   styleUrls: ['./story.component.sass']
 })
 export class StoryComponent implements OnInit, AfterViewInit {
+  public globalAssets: Subject<any[]> = new Subject();
   public globalSpeed: number;
   public showDial = false;
   public app: PIXI.Application;
   public appRunning = false;
+  public loader: Loader = Loader.shared;
 
+  // PIXI Canvas DOM Element Ref
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
 
-  constructor() { }
+  // Pause the whole app on SPACE press.
+  @HostListener('window:keydown', ['$event'])
+  onKeyDown($event) {
+    if ($event.keyCode === 32) {
+      this.pauseStory($event);
+    }
+  }
+  constructor() {
+    this.loader = PIXI.Loader.shared;
+  }
 
   ngOnInit() {
-    //  Demo Stuff, turn this off and enable dial when done.
-    this.globalSpeed = 0.1;
+    this.globalSpeed = 0.3;
   }
 
   ngAfterViewInit() {
@@ -48,18 +62,8 @@ export class StoryComponent implements OnInit, AfterViewInit {
   }
 
   public receiveDialSpeed(speed) {
-    /**
-     * This will be the global speed multiplier for all the other looped animations.
-     * */
-
-    // console.log('dialSpeed', speed);
+    /* This will be the global speed multiplier for all the other looped animations. */
     this.globalSpeed = speed;
-  }
-
-  envReady($event: any) {
-      this.showDial = true;
-      this.app.start();
-      this.appRunning = true;
   }
 
   pauseStory($event) {
@@ -70,5 +74,16 @@ export class StoryComponent implements OnInit, AfterViewInit {
       this.app.start();
       this.appRunning = true;
     }
+  }
+
+  allAssetsLoaded($event: any[]) {
+    // All assets have loaded
+    this.globalAssets.next($event);
+  }
+
+  envReady($event: any) {
+    this.showDial = true;
+    this.app.start();
+    this.appRunning = true;
   }
 }

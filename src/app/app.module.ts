@@ -5,7 +5,8 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { LottieAnimationViewModule } from 'ng-lottie';
 import { FlexLayoutModule } from '@angular/flex-layout';
-import { PixiModule } from 'ngxpixi';
+import { AtftModule } from 'atft';
+
 // import {RotatingDialComponent} from "./rotating-dial";
 import { StoryComponent } from './containers/story/story.component';
 import { IntroComponent } from './containers/intro/intro.component';
@@ -19,10 +20,11 @@ import { DialSceneComponent } from './components/rotating-dial/dial-scene.compon
 import { RotatingDialComponent } from './components/rotating-dial/rotating-dial.component';
 import { PlayComponent } from './containers/play/play.component';
 import { TerrainCreatorComponent } from './components/terrain-creator/terrain-creator.component';
-import { AtftModule } from 'atft';
+import { AssetLoaderComponent } from './components/asset-loader/asset-loader.component';
 
 @NgModule({
   declarations: [
+    AssetLoaderComponent,
     TerrainCreatorComponent,
     PlayComponent,
     DialSceneComponent,
@@ -36,7 +38,6 @@ import { AtftModule } from 'atft';
     EnvironmentComponent
   ],
   imports: [
-    PixiModule,
     BrowserModule,
     BrowserAnimationsModule,
     FormsModule,

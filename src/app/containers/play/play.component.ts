@@ -8,16 +8,17 @@ import { StreamingTerrainGenerator } from '../../services/streaming-terrain-gene
   styleUrls: ['./play.component.sass']
 })
 export class PlayComponent implements OnInit {
+  loader: PIXI.Loader = PIXI.Loader.shared;
   @ViewChild('noiseBackground', {static: true}) noiseBackgroundRef: ElementRef;
   constructor() { }
 
   ngOnInit() {
     //  Demo Stuff, turn this off and enable dial when done.
-    this.noiseBackgroundRef.nativeElement.width = window.innerWidth;
-    this.noiseBackgroundRef.nativeElement.height = window.innerHeight;
+    // this.noiseBackgroundRef.nativeElement.width = window.innerWidth;
+    // this.noiseBackgroundRef.nativeElement.height = window.innerHeight;
 
     // NOTE: FIRST TERRAIN GENERATOR
-    const terrain = new TerrainGenerator(this.noiseBackgroundRef, window.innerWidth, window.innerHeight);
+    // const terrain = new TerrainGenerator(this.noiseBackgroundRef, window.innerWidth, window.innerHeight);
 
     // Reverse the draw for the mirror tile.
     // terrain.pos.reverse();
