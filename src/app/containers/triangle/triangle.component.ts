@@ -2,9 +2,10 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, OnInit, ViewChild }
 import * as _ from 'lodash';
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 import { throttleTime } from 'rxjs/operators';
-import { TweenLite, TweenMax } from 'gsap';
+import { TweenLite, TimelineLite, Power2 } from 'gsap';
+
+import { KawaseBlurFilter, AdjustmentFilter, CRTFilter, AdjustmentOptions, CRTOptions } from 'pixi-filters';
 import PIXIGlowFilter from '../../pixi-filters/glow';
-import { KawaseBlurFilter } from 'pixi-filters';
 
 
 @Component({
@@ -19,33 +20,64 @@ export class TriangleComponent implements AfterViewInit {
   public triCoordGenerated: {x: number; y: number}[][] = [];
   public triangleSprites: any[] = [];
   private triangleCoordinates: any[] = [];
-  public mousePosition: EventEmitter<any> = new EventEmitter();
+  public mousePositionStream: EventEmitter<any> = new EventEmitter();
+  public tickerStream: EventEmitter<any> = new EventEmitter();
+  public filters = {
+    adjustment: new AdjustmentFilter({gamma: 3, contrast: 1, saturation: 1, brightness: 2, red: 1, green: 1, blue: 1, alpha: 1} as AdjustmentOptions),
+    blur: new KawaseBlurFilter(0, 1, false),
+    crt: new CRTFilter({curvature: 2, lineWidth: 0.5, lineContrast: 0.2, verticalLine: 0, noise: 0.3, noiseSize: 1.2, vignetting: 0.1, vignettingAlpha: 0, vignettingBlur: 0.5, time: 6} as CRTOptions),
+    glow: new PIXIGlowFilter()
+    // crt: new CRTFilter({curvature: 1, lineWidth: 3, lineContrast: 0.3, verticalLine: 0, noise: 0.2, noiseSize: 1, vignetting: 0.3, vignettingAlpha: 1, vignettingBlur: 0.3, time: 0.5} as CRTOptions)
+  };
+  public settings: {
+    initialSpriteAlpha: number;
+    trailOpacity: number;
+    trail: number;
+  } = {
+    initialSpriteAlpha: 0,
+    trailOpacity: 0.7,
+    trail: 1
+  };
+  public entryTriangle: PIXI.Sprite;
   private app: PIXI.Application;
   private particlesContainer: PIXI.ParticleContainer;
   private tickerValue: number;
+
+
   constructor() {
-    this.mousePosition
+    this.mousePositionStream
         .pipe( throttleTime(50) )
         .subscribe((res) => {
           // console.log('stream', res);
-          const foundSpriteIndex = [];
-          const triangleCoordinatesLength = this.triangleCoordinates.length;
-          for (let i = 0; i < triangleCoordinatesLength; ++i) {
-            if (
-                res.x > this.triangleCoordinates[i][0] &&
-                res.x < this.triangleCoordinates[i][0] + 50 &&
-                res.y > this.triangleCoordinates[i][1] &&
-                res.y < this.triangleCoordinates[i][1] + 50
-            ) { foundSpriteIndex.push(i); }
+          const foundTrianglesIndexes = this.findTriangleIndexesNearCoordinates(res);
+          this.animateTrianglesUnderCursor(foundTrianglesIndexes);
+        });
+    this.tickerStream
+      .pipe( throttleTime(50) )
+        .subscribe((time) => {
+          // console.log('stream', res);
+          this.filters.crt.time = time;
+          this.filters.crt.curvature = time;
+          const alpha = this.randintFloat(0.6, 0.9).toFixed(2) as any;
+          if (this.entryTriangle) {
+            this.entryTriangle.alpha = alpha;
           }
-          // TODO: Still sucks.
-          foundSpriteIndex.map((ele) => {
-            this.triangleSprites[ele].alpha = 0.7;
-            TweenLite.to(this.triangleSprites[ele], 1, {alpha: 0});
-          });
+          // this.filters.crt.seed = time;
 
         });
   }
+
+  public PIXIticker(time) {
+    this.tickerValue = time;
+    // tslint:disable-next-line:max-line-length
+
+    if (this.entryTriangle) {
+      this.entryTriangle.tint = 0xFF0000;
+    }
+
+    this.tickerStream.next(time);
+  }
+
 
   ngAfterViewInit(): void {
     this.app = new PIXI.Application({
@@ -72,67 +104,6 @@ export class TriangleComponent implements AfterViewInit {
         .load(this.loaderComplete.bind(this));
   }
 
-  // private createCoordinatesCentral() {
-  //   const point = (x, y) => {
-  //     return {x, y} as PIXI.Point;
-  //   };
-  //
-  //   const withinBorder = (p: PIXI.Point, coords) => {
-  //     return p.x > coords[0] - movingFrame
-  //         && p.x < coords[2] /*+ movingFrame*/
-  //         && p.y > coords[1] - movingFrame
-  //         && p.y < coords[3] /*+ movingFrame*/;
-  //   };
-  //
-  //   const verifyPoint = (list, p) => {
-  //     const indexes = list.length;
-  //     let existence = false;
-  //     for (let i = 0; i < indexes; i++) {
-  //       if (list[i].x === p.x && list[i].y === p.y) {
-  //         existence = true;
-  //         break;
-  //       }
-  //     }
-  //     return existence;
-  //   };
-  //
-  //   const pushNeighbourhingPoints = (list, source) => {
-  //     list.push(source);
-  //     if (!withinBorder(source, screenCoord)) {
-  //       return false;
-  //     }
-  //
-  //     const r = point(source.x + movingFrame, source.y );
-  //     !verifyPoint(list, r) ? pushNeighbourhingPoints(list, r) : list.push(r);
-  //
-  //     const rt = point(source.x + movingFrame, source.y - movingFrame );
-  //     !verifyPoint(list, rt) ? pushNeighbourhingPoints(list, rt) : list.push(rt);
-  //
-  //     const rb = point(source.x + movingFrame, source.y + movingFrame );
-  //     !verifyPoint(list, rb) ? pushNeighbourhingPoints(list, rb) : list.push(rb);
-  //     const t = point(source.x, source.y - movingFrame );
-  //     !verifyPoint(list, t) ? pushNeighbourhingPoints(list, t) : list.push(t);
-  //     const b = point(source.x, source.y + movingFrame );
-  //     !verifyPoint(list, b) ? pushNeighbourhingPoints(list, b) : list.push(b);
-  //     const l = point(source.x - movingFrame, source.y );
-  //     !verifyPoint(list, l) ? pushNeighbourhingPoints(list, l) : list.push(l);
-  //     const lt = point(source.x - movingFrame, source.y - movingFrame );
-  //     !verifyPoint(list, lt) ? pushNeighbourhingPoints(list, lt) : list.push(lt);
-  //     const lb = point(source.x - movingFrame, source.y + movingFrame );
-  //     !verifyPoint(list, lb) ? pushNeighbourhingPoints(list, lb) : list.push(lb);
-  //   };
-  //
-  //
-  //   const screenCoord = [0, 0, window.innerWidth, window.innerHeight];
-  //   const movingFrame = 52;
-  //   const center = {x: Math.floor(window.innerWidth / 2), y: Math.floor(window.innerHeight / 2)} as PIXI.Point;
-  //
-  //   pushNeighbourhingPoints(this.triCoordGenerated, center);
-  //
-  //   this.triCoordGenerated = _.uniqWith(this.triCoordGenerated, _.isEqual);
-  //   console.log('this.triCoordGenerated', this.triCoordGenerated);
-  // }
-
   private createCoordinatesLine() {
     const point = (x, y) => {
       return {x, y};
@@ -140,10 +111,6 @@ export class TriangleComponent implements AfterViewInit {
 
     const isEven = (n) => {
       return n % 2 === 0;
-    };
-
-    const isOdd = (n) => {
-      return Math.abs(n % 2) === 1;
     };
 
     const movingFrame = 50;
@@ -184,15 +151,108 @@ export class TriangleComponent implements AfterViewInit {
   }
 
   public loaderComplete(loader, res) {
+    // NOTE: All the important things happen here.
+    this.calculateAddSprites(res);
+    this.staticTriangleAnimations();
+    this.startMouseEventStream(this.app);
+    // NOTE ^: All the important things happen here.
+
+    this.app.ticker.add(this.PIXIticker.bind(this));
+    this.app.stage.filters = [this.filters.adjustment, this.filters.crt];
+    this.app.start();
+  }
+
+  private onButtonDown(triangle: {target: PIXI.Sprite}) {
+    console.log(triangle);
+    // this.isdown = true;
+    // this.texture = textureButtonDown;
+    // this.alpha = 1;
+  }
+
+  private onButtonUp(triangle: {target: PIXI.Sprite}) {
+    // this.isdown = false;
+    // if (this.isOver) {
+    //   this.texture = textureButtonOver;
+    // } else {
+    //   this.texture = textureButton;
+    // }
+  }
+
+  private onButtonOver(event: any) {
+    this.mousePositionStream.emit(event.data.global);
+  }
+
+  private onButtonOut(triangle: {target: PIXI.Sprite}) {
+    // console.log('onButtonOut', triangle);
+    // setTimeout(() => triangle.target.alpha = 1, 10);
+  }
+
+
+  private findTriangleIndexesNearCoordinates(res: {x: number; y: number;}) {
+    const foundSpriteIndex = [];
+    const triangleCoordinatesLength = this.triangleCoordinates.length;
+    for (let i = 0; i < triangleCoordinatesLength; ++i) {
+      if (
+          res.x > this.triangleCoordinates[i][0] - 26 &&
+          res.x < this.triangleCoordinates[i][0] + 52 &&
+          res.y > this.triangleCoordinates[i][1] - 26 &&
+          res.y < this.triangleCoordinates[i][1] + 52
+      ) { foundSpriteIndex.push(i); }
+    }
+    return foundSpriteIndex;
+  }
+
+  private animateTrianglesUnderCursor(foundSpriteIndex: any[]) {
+    foundSpriteIndex.map((ele) => {
+      // NOTE: Animate every triangle besides entryTriangle
+      if (!this.triangleSprites[ele].buttonMode) {
+        this.triangleSprites[ele].alpha = this.settings.trailOpacity;
+        TweenLite.to(this.triangleSprites[ele], this.settings.trail, {alpha: 0})/*.delay(this.randint(0, 0.3))*/;
+      }
+    });
+  }
+
+  private staticTriangleAnimations() {
+    setTimeout(() => {
+
+      // this.triangleSprites.map((sprite) => {
+      //   const timeline = new TimelineLite();
+      //   timeline.to(sprite, 3, {alpha: 1, ease: Power2.easeIn});
+      //   timeline.to(sprite, 3, {alpha: 0, ease: Power2.easeOut});
+      // });
+
+      this.entryTriangle = this.triangleSprites[this.randint(this.triangleSprites.length / 3 - 20, this.triangleSprites.length / 3 + 20)];
+      // this.entryTriangle.filters.push(new PIXIGlowFilter() as any);
+      this.entryTriangle.interactive = true;
+      this.entryTriangle.buttonMode = true;
+      this.entryTriangle.alpha = 1;
+      this.entryTriangle.on('pointerdown', this.clickedEntryTriangle.bind(this));
+
+      // const pos = {x: this.entryTriangle.position.x + 26, y: this.entryTriangle.position.y};
+      // const foundTrianglesIndexes = this.findTriangleIndexesNearCoordinates(pos);
+      // foundTrianglesIndexes.map((index) => {
+      //   this.triangleSprites[index].buttonMode = true;
+      //   this.triangleSprites[index].alpha = 0.2;
+      // });
+
+
+
+
+
+    }, 3000);
+  }
+
+  private startMouseEventStream(app) {
+    app.renderer﻿.plugins.interaction.on( 'mousemove', this.onButtonOver.bind(this));
+  }
+
+  private calculateAddSprites(res: any) {
     this.particlesContainer = new PIXI.ParticleContainer();
     this.particlesContainer.width = window.innerWidth;
     this.particlesContainer.height = window.innerHeight;
     this.particlesContainer.position.x = 0;
     this.particlesContainer.position.y = 0;
-    // this.particlesContainer.filters = [new PIXIGlowFilter()];
-    // this.particlesContainer.filters = [new PIXI.filters.BlurFilter(20, 1, 1)];
-    this.particlesContainer.filters = [new PIXI.filters.NoiseFilter(10, 30)];
-    // this.createCoordinatesCentral();
+
     this.createCoordinatesLine();
 
     for (let i = 0; i < this.triCoordGenerated.length; ++i) {
@@ -203,8 +263,8 @@ export class TriangleComponent implements AfterViewInit {
         } else {
           sprite = PIXI.Sprite.from(res.triangle.url);
         }
-        sprite.alpha = 0;
-        sprite.filters = [new KawaseBlurFilter(0.1, 1, false)];
+        sprite.alpha = this.settings.initialSpriteAlpha;
+        sprite.filters = [this.filters.blur];
         sprite.position.x = this.triCoordGenerated[i][j].x;
         sprite.position.y = this.triCoordGenerated[i][j].y;
 
@@ -228,49 +288,18 @@ export class TriangleComponent implements AfterViewInit {
     }
 
     this.app.stage.addChild((this.particlesContainer));
-    // console.log('this.particlesContainer', this.particlesContainer);
-    // this.particlesContainer.interactive = true;
-    // this.particlesContainer.buttonMode = true;
-    // this.app.stage.on('pointerover', this.onButtonOver.bind(this));
-    // this.app.stage.on('pointerdown', this.onButtonDown.bind(this));
-
-    // this.app.stage.addChild(this.particlesContainer);
-    // console.log(this.particlesContainer);
-
-    this.app.ticker.add(this.PIXIticker.bind(this));
-    this.app.start();
-    this.app.renderer﻿.plugins.interaction.on( 'mousemove', this.onButtonOver.bind(this));
-    console.log('this.app', this.app);
   }
 
-  public PIXIticker(time) {
-    this.tickerValue = time;
+  private clickedEntryTriangle() {
+    console.log('entry triangle clicked', this.entryTriangle);
+    window.location.reload();
   }
 
-  private onButtonDown(triangle: {target: PIXI.Sprite}) {
-    console.log(triangle);
-    // this.isdown = true;
-    // this.texture = textureButtonDown;
-    // this.alpha = 1;
+  private randint(min, max): number {
+    return Math.ceil(Math.random() * (max - min) + min);
   }
 
-  private onButtonUp(triangle: {target: PIXI.Sprite}) {
-    // this.isdown = false;
-    // if (this.isOver) {
-    //   this.texture = textureButtonOver;
-    // } else {
-    //   this.texture = textureButton;
-    // }
+  private randintFloat(min, max): number {
+    return Math.random() * (max - min) + min;
   }
-
-  private onButtonOver(event: any) {
-    this.mousePosition.emit(event.data.global);
-  }
-
-  private onButtonOut(triangle: {target: PIXI.Sprite}) {
-    // console.log('onButtonOut', triangle);
-    // setTimeout(() => triangle.target.alpha = 1, 10);
-  }
-
-
 }
