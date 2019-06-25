@@ -33,10 +33,12 @@ export class TriangleComponent implements AfterViewInit {
     initialSpriteAlpha: number;
     trailOpacity: number;
     trail: number;
+    triangleSize: number;
   } = {
-    initialSpriteAlpha: 0,
+    initialSpriteAlpha: 1,
     trailOpacity: 0.7,
-    trail: 1
+    trail: 1,
+    triangleSize: 54
   };
   public entryTriangle: PIXI.Sprite;
   private app: PIXI.Application;
@@ -113,23 +115,21 @@ export class TriangleComponent implements AfterViewInit {
       return n % 2 === 0;
     };
 
-    const movingFrame = 50;
-
-    const heightPoints = Math.ceil(window.innerHeight / movingFrame);
-    const widthPoints = Math.ceil(window.innerWidth / movingFrame);
+    const heightPoints = Math.ceil(window.innerHeight / this.settings.triangleSize);
+    const widthPoints = Math.ceil(window.innerWidth / this.settings.triangleSize);
 
     for (let i = 0; i <= heightPoints; ++i) {
       let lastPoint;
-      const yEven = i * movingFrame + (movingFrame / 2);
-      const yOdd = i * movingFrame - (movingFrame / 2);
+      const yEven = i * this.settings.triangleSize + (this.settings.triangleSize / 2);
+      const yOdd = i * this.settings.triangleSize - (this.settings.triangleSize / 2);
       if (isEven(i)) {
-        lastPoint = point(-(movingFrame * 1.5), yEven );
+        lastPoint = point(-(this.settings.triangleSize * 1.5), yEven );
       } else {
-        lastPoint = point(-movingFrame, yOdd );
+        lastPoint = point(-this.settings.triangleSize, yOdd );
       }
       this.triCoordGenerated.push([lastPoint]);
       for (let j = 0; j <= widthPoints; ++j) {
-        this.triCoordGenerated[i].push(point(lastPoint.x += movingFrame, lastPoint.y));
+        this.triCoordGenerated[i].push(point(lastPoint.x += this.settings.triangleSize, lastPoint.y));
       }
     }
     const triCopy = JSON.parse(JSON.stringify(this.triCoordGenerated));
@@ -137,7 +137,7 @@ export class TriangleComponent implements AfterViewInit {
     for (let i = 0; i < triCopyLength; ++i) {
       const jL = triCopy[i].length;
       for (let j = 0; j < jL; ++j) {
-        triCopy[i][j].y -= movingFrame;
+        triCopy[i][j].y -= this.settings.triangleSize;
       }
     }
     this.triCoordGenerated = this.triCoordGenerated.concat(triCopy);
@@ -153,17 +153,24 @@ export class TriangleComponent implements AfterViewInit {
   public loaderComplete(loader, res) {
     // NOTE: All the important things happen here.
     this.calculateAddSprites(res);
-    this.staticTriangleAnimations();
-    this.startMouseEventStream(this.app);
+    // this.staticTriangleAnimations();
+    // this.startMouseEventStream(this.app);
+    this.addFiltersToStage(this.app);
     // NOTE ^: All the important things happen here.
 
     this.app.ticker.add(this.PIXIticker.bind(this));
-    this.app.stage.filters = [this.filters.adjustment, this.filters.crt];
+
     this.app.start();
   }
 
   private onButtonDown(triangle: {target: PIXI.Sprite}) {
-    console.log(triangle);
+
+    if (triangle.target.alpha === 0.2) {
+      triangle.target.alpha = 1;
+    } else {
+      triangle.target.alpha = 0.2;
+    }
+    console.log(this.triangleSprites);
     // this.isdown = true;
     // this.texture = textureButtonDown;
     // this.alpha = 1;
@@ -268,17 +275,17 @@ export class TriangleComponent implements AfterViewInit {
         sprite.position.x = this.triCoordGenerated[i][j].x;
         sprite.position.y = this.triCoordGenerated[i][j].y;
 
-        // sprite.interactive = true;
-        // sprite.buttonMode = true;
-        // sprite
-        // // Mouse & touch events are normalized into
-        // // the pointer* events for handling different
-        // // button events.
-        //     .on('pointerdown', this.onButtonDown.bind(this))
-        //     .on('pointerup', this.onButtonUp.bind(this))
-        //     .on('pointerupoutside', this.onButtonUp.bind(this))
-        //     .on('pointerover', this.onButtonOver.bind(this))
-        //     .on('pointerout', this.onButtonOut.bind(this));
+        sprite.interactive = true;
+        sprite.buttonMode = true;
+        sprite
+        // Mouse & touch events are normalized into
+        // the pointer* events for handling different
+        // button events.
+            .on('pointerdown', this.onButtonDown.bind(this))
+            // .on('pointerup', this.onButtonUp.bind(this))
+            // .on('pointerupoutside', this.onButtonUp.bind(this))
+            // .on('pointerover', this.onButtonOver.bind(this))
+            // .on('pointerout', this.onButtonOut.bind(this));
 
         this.triangleCoordinates.push([this.triCoordGenerated[i][j].x, this.triCoordGenerated[i][j].y]);
         this.triangleSprites.push(sprite);
@@ -301,5 +308,9 @@ export class TriangleComponent implements AfterViewInit {
 
   private randintFloat(min, max): number {
     return Math.random() * (max - min) + min;
+  }
+
+  private addFiltersToStage(app: PIXI.Application) {
+    app.stage.filters = [this.filters.adjustment, this.filters.crt];
   }
 }
