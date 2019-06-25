@@ -12,7 +12,6 @@ import {
 } from '@angular/core';
 
 import 'pixi-spine';
-import 'pixi-viewport';
 
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 

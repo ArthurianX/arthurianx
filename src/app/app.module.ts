@@ -20,11 +20,13 @@ import { RotatingDialComponent } from './components/rotating-dial/rotating-dial.
 import { PlayComponent } from './containers/play/play.component';
 import { TerrainCreatorComponent } from './components/terrain-creator/terrain-creator.component';
 import { AssetLoaderComponent } from './components/asset-loader/asset-loader.component';
+import { TriangleComponent } from './containers/triangle/triangle.component';
 
 @NgModule({
   declarations: [
     AssetLoaderComponent,
     TerrainCreatorComponent,
+    TriangleComponent,
     PlayComponent,
     DialSceneComponent,
     RotatingDialComponent,
