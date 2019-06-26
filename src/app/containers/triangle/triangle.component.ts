@@ -56,8 +56,8 @@ export class TriangleComponent implements AfterViewInit {
     stageFilters: boolean
   } = {
     trailMode: false,
-    drawingMode: true,
-    staticAnimation: false,
+    drawingMode: false,
+    staticAnimation: true,
     stageFilters: true
   };
   public entryTriangle: PIXI.Sprite;
@@ -175,7 +175,15 @@ export class TriangleComponent implements AfterViewInit {
         triCopy[i][j].y -= this.settings.triangleSize;
       }
     }
+
     this.triCoordGenerated = this.triCoordGenerated.concat(triCopy);
+    // TODO: There's a fuckup here on how the arrays are merged.
+    // const mergedArr = [];
+    // for (let i = 0; i < this.triCoordGenerated.length; ++i) {
+    //   mergedArr.push(this.triCoordGenerated[i]);
+    //   mergedArr.push(triCopy[i]);
+    // }
+    // this.triCoordGenerated = mergedArr;
   }
 
   private onButtonDown() {
@@ -277,14 +285,39 @@ export class TriangleComponent implements AfterViewInit {
       // What to do with it next ^ ?
     };
 
-    if (!this.toggles.staticAnimation) { return false; }
-    setTimeout(() => {
-      showProgressingTriangle();
+    const centerWave = () => {
+      const rows = this.triangleCoordinates.length;
+      const cols = this.triangleCoordinates[0].length;
+
+      for (let row = 0; row < rows; ++row) {
+        for (let col = 0; col < cols; ++col) {
+          if (this.triangleSprites[row]) {
+            const timeline = new TimelineLite();
+            timeline.to(this.triangleSprites[row], 2, { alpha: 1, ease: Power2.easeOut }).delay(row / 600);
+            timeline.to(this.triangleSprites[row], 1, { alpha: 0, ease: Power2.easeIn });
+          }
+          if (this.triangleSprites[rows - row]) {
+            const timeline = new TimelineLite();
+            timeline.to(this.triangleSprites[rows - row], 2, { alpha: 1, ease: Power2.easeOut }).delay(row / 600);
+            timeline.to(this.triangleSprites[rows - row], 1, { alpha: 0, ease: Power2.easeIn });
+          }
+        }
+      }
+    };
+
+    const lightUpTheScreen = () => {
       this.triangleSprites.map((sprite) => {
         const timeline = new TimelineLite();
         timeline.to(sprite, 3, {alpha: 1, ease: Power2.easeIn}).delay(this.randintFloat(1, 3));
         // timeline.to(sprite, 3, {alpha: 0, ease: Power2.easeOut});
       });
+    };
+
+    if (!this.toggles.staticAnimation) { return false; }
+    setTimeout(() => {
+      showProgressingTriangle();
+      // lightUpTheScreen();
+      // centerWave();
 
 
 
