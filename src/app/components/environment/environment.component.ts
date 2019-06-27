@@ -20,13 +20,14 @@ import {
   TweenMax,
   TimelineMax,
   Power4,
+  Power2,
   Linear
 } from 'gsap';
 import * as PixiPlugin_ from 'gsap/PixiPlugin';
 const PixiPlugin = PixiPlugin_;
 import { forkJoin, of, Subject, zip } from 'rxjs';
 import { catchError, map, throttleTime } from 'rxjs/operators';
-import { EnvironmentSwitcher, TerrainGen } from '../../interfaces/environment.interface';
+import { EnvironmentSwitcher, GlobalDate, TerrainGen } from '../../interfaces/environment.interface';
 
 import {GlitchFilter, PixelateFilter, AsciiFilter, AdvancedBloomFilter, DropShadowFilter} from 'pixi-filters';
 
@@ -39,17 +40,18 @@ import {GlitchFilter, PixelateFilter, AsciiFilter, AdvancedBloomFilter, DropShad
 export class EnvironmentComponent implements OnChanges, OnInit {
   // NOTE: App and ticker are received from above.
   @Input() public app: PIXI.Application;
-
+  @Input() public sharedTicker: PIXI.Ticker;
   @Input() public speed: number;
   @Input() public assets: Subject<any>;
   @Output() public envReady: EventEmitter<any> = new EventEmitter();
+  @Output() public currentDate: EventEmitter<GlobalDate> = new EventEmitter();
+
   @ViewChild('clouds', {static: true}) cloudsContainerRef: ElementRef;
 
   public readyApp: Subject<PIXI.Application> = new Subject();
-
   public loadingPercentage: number;
   public loading: boolean;
-  public tickerLoop: Subject<any> = new Subject();
+  public tickerStream: Subject<any> = new Subject();
   public tickerState: {
     month: 'Jan';
     year: 1985;
@@ -58,7 +60,6 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     year: 1985
   };
 
-  public accoef = 0; // Acceleration Coefficient.
   public outsideTickerAnimationDuration = 3; // Animations outside
 
   public visible: EnvironmentSwitcher = {
@@ -147,11 +148,6 @@ export class EnvironmentComponent implements OnChanges, OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.speed && changes.speed.currentValue) {
-      this.accoef = changes.speed.currentValue * 3;
-      // TODO: Formulate a better speed setting
-      // this.outsideTickerAnimationDuration = (3 - changes.speed.currentValue);
-    }
     if (changes.app && changes.app.currentValue) {
       this.readyApp.next(this.app);
     }
@@ -167,18 +163,15 @@ export class EnvironmentComponent implements OnChanges, OnInit {
 
   public appReceived(res) {
 
-    this.app.ticker.add(this.PIXIticker.bind(this));
+    this.sharedTicker.add(this.environmentLoop.bind(this));
     // Change the month with GSAP
-    this.tickerLoop.pipe( throttleTime(500) ).subscribe((res) => {
-          // console.log('Ticker Stream', res);
-          // this.fgFilter.refresh();
-
-      const monthPixels = res.width / 12;
+    this.tickerStream.pipe( throttleTime(500) ).subscribe((time) => {
+      const monthPixels = time.width / 12;
       // TODO: Figure out how we're going in reverse !?!? second param to adjustSeason
-      if (res.x > 0) {
-        this.adjustSeason(this.monthsList[12 - Math.ceil(res.x / monthPixels)]);
+      if (time.x > 0) {
+        this.adjustSeason(this.monthsList[12 - Math.ceil(time.x / monthPixels)]);
       } else {
-        this.adjustSeason(this.monthsList[Math.abs(Math.ceil(res.x / monthPixels))]);
+        this.adjustSeason(this.monthsList[Math.abs(Math.ceil(time.x / monthPixels))]);
       }
 
     });
@@ -197,7 +190,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
 
     this.applyFiltersToSprites();
 
-
+    // TOOD: Scopify this events, for env, and or other layers / components
     this.app.stage.on('pointerdown', this.onTouchStart);
 
     // this.introEnvironment();
@@ -206,8 +199,8 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     setTimeout(() => { this.envReady.emit(true); }, 500);
   }
 
-  public PIXIticker(time) {
-    this.ticker += this.accoef; // Position is shifted by an acceleration coefficient.
+  public environmentLoop(time) {
+    this.ticker += this.speed; // Position is shifted by an acceleration coefficient.
 
     // Background spacing on x axis happens in relation to the layers calculated widths
     EnvironmentComponent.spriteMotion(this.frontHills1, this.ticker, this.hillSizes, false, 0.8);
@@ -234,7 +227,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     EnvironmentComponent.spriteMotion(this.sun, this.ticker, [this.innerWidth + 280, 0], false, 0.4);
     EnvironmentComponent.spriteMotion(this.sun1, this.ticker, [this.innerWidth + 280, 0], true, 0.4);
 
-    this.tickerLoop.next({
+    this.tickerStream.next({
       width: this.months.width,
       scale: this.months.scale,
       x: this.months.x,
@@ -664,6 +657,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
   }
 
   private adjustSeason(month, reverse = false) {
+    // Do a month change only when there's a change
     if (this.tickerState.month !== month) {
       this.tickerState.month = month;
 
@@ -712,6 +706,12 @@ export class EnvironmentComponent implements OnChanges, OnInit {
         case 'Dec':
           break;
       }
+
+      this.currentDate.emit({
+        direction: reverse ? 'backward' : 'forward',
+        month,
+        year: this.tickerState.year
+      });
     }
   }
 
@@ -761,6 +761,5 @@ export class EnvironmentComponent implements OnChanges, OnInit {
       array.map( (it) => app.stage.addChild(it));
     }
   }
-
 
 }

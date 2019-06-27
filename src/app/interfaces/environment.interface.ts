@@ -14,5 +14,11 @@ export interface EnvironmentSwitcher {
     hills: boolean;
     road: boolean;
     months: boolean;
-    year: boolean
+    year: boolean;
+}
+
+export interface GlobalDate {
+    direction: 'forward' | 'backward';
+    year: number;
+    month: 'Jan' | 'Feb' | 'Mar' | 'Apr' | 'May' | 'Jun' | 'Jul' | 'Aug' | 'Sep' | 'Oct' | 'Nov' | 'Dec';
 }

@@ -2,6 +2,7 @@ import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild }
 
 import { Loader } from 'pixi.js';
 import { Subject } from 'rxjs';
+import { GlobalDate } from '../../interfaces/environment.interface';
 
 @Component({
   selector: 'app-story',
@@ -15,6 +16,7 @@ export class StoryComponent implements OnInit, AfterViewInit {
   public app: PIXI.Application;
   public appRunning = false;
   public loader: Loader = Loader.shared;
+  public ticker: PIXI.Ticker;
 
   // PIXI Canvas DOM Element Ref
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;
@@ -28,6 +30,9 @@ export class StoryComponent implements OnInit, AfterViewInit {
   }
   constructor() {
     this.loader = PIXI.Loader.shared;
+    this.ticker = PIXI.Ticker.shared;
+    this.ticker.autoStart = false;
+    this.ticker.stop();
   }
 
   ngOnInit() {
@@ -58,12 +63,12 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
     this.app.stop();
 
-    // this.app.ticker.add(this.PIXIticker.bind(this));
+    // this.app.ticker.add(this.environmentLoop.bind(this));
   }
 
   public receiveDialSpeed(speed) {
     /* This will be the global speed multiplier for all the other looped animations. */
-    this.globalSpeed = speed;
+    this.globalSpeed = speed * 3;
   }
 
   pauseStory($event) {
@@ -81,9 +86,14 @@ export class StoryComponent implements OnInit, AfterViewInit {
     this.globalAssets.next($event);
   }
 
-  envReady($event: any) {
+  envReady() {
     this.showDial = true;
     this.app.start();
+    this.ticker.start();
     this.appRunning = true;
+  }
+
+  setGlobalDate($event: GlobalDate) {
+    console.log('Date is ', `${$event.year} - ${$event.month} - moving ${$event.direction}`);
   }
 }

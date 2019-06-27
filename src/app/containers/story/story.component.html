@@ -4,9 +4,12 @@
   <asset-loader [loader]="loader" (loadingComplete)="allAssetsLoaded($event)"></asset-loader>
   <environment
           [app]="app"
+          [sharedTicker]="ticker"
           [assets]="globalAssets"
           [speed]="globalSpeed"
-          (envReady)="envReady($event)">
+          (envReady)="envReady()"
+          (currentDate)="setGlobalDate($event)"
+  >
   </environment>
   <canvas #pixiBackground id="pixiBackground"></canvas>
 </div>
