@@ -9,6 +9,7 @@ import { GlobalDate } from '../../interfaces/environment.interface';
   templateUrl: './story.component.html',
   styleUrls: ['./story.component.sass']
 })
+
 export class StoryComponent implements OnInit, AfterViewInit {
   public globalAssets: Subject<any[]> = new Subject();
   public globalSpeed: number;
@@ -74,9 +75,11 @@ export class StoryComponent implements OnInit, AfterViewInit {
   pauseStory($event) {
     if (this.appRunning) {
       this.app.stop();
+      this.ticker.stop();
       this.appRunning = false;
     } else {
       this.app.start();
+      this.ticker.start();
       this.appRunning = true;
     }
   }

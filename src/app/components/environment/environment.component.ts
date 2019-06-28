@@ -12,6 +12,7 @@ import {
 } from '@angular/core';
 
 import 'pixi-spine';
+import 'pixi-projection';
 
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 
@@ -25,6 +26,7 @@ import {
 } from 'gsap';
 import * as PixiPlugin_ from 'gsap/PixiPlugin';
 const PixiPlugin = PixiPlugin_;
+
 import { forkJoin, of, Subject, zip } from 'rxjs';
 import { catchError, map, throttleTime } from 'rxjs/operators';
 import { EnvironmentSwitcher, GlobalDate, TerrainGen } from '../../interfaces/environment.interface';
@@ -435,7 +437,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
       this.pixieSpineDemo.transform.position.x = this.app.screen.width / window.devicePixelRatio / 2.6;
     }, 200);
 
-    this.applyFilters();
+    this.applySpineFilters();
 
     // this.app.stage.addChild(this.pixieSpineDemo);
     return [this.pixieSpineDemo];
@@ -644,7 +646,7 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     this.pixieSpineDemo.state.addAnimation(0, 'running', true, 0);
   }
 
-  private applyFilters() {
+  private applySpineFilters() {
     // this.pixieSpineDemo.filters = [new PIXI.filters.BlurFilter()];
     this.pixieSpineDemo.filters = [
       // new PIXIGlowFilter(),
@@ -728,6 +730,8 @@ export class EnvironmentComponent implements OnChanges, OnInit {
     this.backHills1.filters ? this.backHills1.filters.push(this.dShadow) : this.backHills1.filters = [this.dShadow];
     this.sun.filters ? this.sun.filters.push(this.dShadow) : this.sun.filters = [this.dShadow];
     this.sun1.filters ? this.sun1.filters.push(this.dShadow) : this.sun1.filters = [this.dShadow];
+    this.sun.filters.push(this.aBloom);
+    this.sun1.filters.push(this.aBloom);
 
     // this.clouds.map((cloud) => {
     //   cloud.filters = [this.dShadow];

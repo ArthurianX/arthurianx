@@ -53,6 +53,8 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
   public github = 'assets/svg/github.svg';
   public linkedin = 'assets/svg/likdicon.svg';
 
+  public playButton = true;
+
   private anim: any;
   private animationSpeed: number = 1;
 
@@ -187,6 +189,7 @@ export class DialAnimationComponent implements OnInit, OnDestroy {
   }
 
   hammerTime() {
+        this.playButton = !this.playButton;
         this.pauseApp.emit(true);
     }
 }

@@ -55,7 +55,7 @@ export class TriangleComponent implements AfterViewInit {
     trailMode: boolean
     stageFilters: boolean
   } = {
-    trailMode: false,
+    trailMode: true,
     drawingMode: false,
     staticAnimation: true,
     stageFilters: true
