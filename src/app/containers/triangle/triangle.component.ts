@@ -55,10 +55,10 @@ export class TriangleComponent implements AfterViewInit {
     trailMode: boolean
     stageFilters: boolean
   } = {
-    trailMode: true,
-    drawingMode: false,
-    staticAnimation: true,
-    stageFilters: true
+    trailMode: false,
+    drawingMode: true,
+    staticAnimation: false,
+    stageFilters: false
   };
   public entryTriangle: PIXI.Sprite;
   private app: PIXI.Application;
@@ -127,6 +127,12 @@ export class TriangleComponent implements AfterViewInit {
     });
 
     this.app.stage.interactive = true;
+
+    // const renderer = this.app.renderer;
+    // renderer.resolution = window.devicePixelRatio;
+    // renderer.resize(window.innerWidth - 1, window.innerHeight);
+    // renderer.resize(window.innerWidth, window.innerHeight );
+    // renderer.plugins.interaction.resolution = window.devicePixelRatio;
 
     this.app.stop();
 

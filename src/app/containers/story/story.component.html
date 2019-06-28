@@ -1,6 +1,5 @@
 <div>
   <dial-animation *ngIf="showDial" (dialSpeed)="receiveDialSpeed($event)" (pauseApp)="pauseStory($event)"></dial-animation>
-  <!-- Canvas for the PIXI Application -->
   <asset-loader [loader]="loader" (loadingComplete)="allAssetsLoaded($event)"></asset-loader>
   <environment
           [app]="app"
@@ -10,5 +9,9 @@
           (envReady)="envReady()"
           (currentDate)="setGlobalDate($event)"
   ></environment>
+  <!-- Canvas for the PIXI Application -->
   <canvas #pixiBackground id="pixiBackground"></canvas>
+  <div class="story-wip">
+    the story <small>- work in progress</small>
+  </div>
 </div>
