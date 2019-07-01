@@ -4,6 +4,10 @@
   <meta charset="utf-8">
   <title>Arthurianx</title>
   <base href="/">
+  <script type="text/javascript">
+    var my_image = new Image();
+    my_image.src = '/assets/loading-logo-opt.gif';
+  </script>
 
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
@@ -17,13 +21,16 @@
       overflow: hidden;
     }
 
-    body app .blob {
-      width: 30px;
-      height: 30px;
+    body app-root .blob {
+      /*width: 30px;*/
+      /*height: 30px;*/
+      /*margin: -15px 0 0 -15px;*/
+      width: 400px;
+      height: 400px;
+      margin: -200px 0 0 -200px;
       top: 50%;
       left: 50%;
       position: absolute;
-      margin: -15px 0 0 -15px;
       text-align: center;
       vertical-align: middle;
       -webkit-border-radius: 100px;
@@ -31,76 +38,13 @@
       border-radius: 100px;
       overflow: hidden;
     }
-
-    @keyframes pulsedot {
-      0% {
-        -webkit-transform: scale(0.2);
-        -moz-transform: scale(0.2);
-        -ms-transform: scale(0.2);
-        -o-transform: scale(0.2);
-        transform: scale(0.2);
-      }
-
-      50% {
-        -webkit-transform: scale(1);
-        -moz-transform: scale(1);
-        -ms-transform: scale(1);
-        -o-transform: scale(1);
-        transform: scale(1);
-      }
-
-      100% {
-        -webkit-transform: scale(0.1);
-        -moz-transform: scale(0.1);
-        -ms-transform: scale(0.1);
-        -o-transform: scale(0.1);
-        transform: scale(0.1);
-      }
-    }
-
-    @keyframes bodybganim {
-      0% {
-        background-color: #0c0c0c;
-      }
-
-      100% {
-        background-color: #222;
-      }
-    }
-
-    body {
-      -webkit-animation: bodybganim 1s 1 forwards ease-in 2s; /* Safari 4+ */
-      -moz-animation:    bodybganim 1s 1 forwards ease-in 2s; /* Fx 5+ */
-      -o-animation:      bodybganim 1s 1 forwards ease-in 2s; /* Opera 12+ */
-      animation:         bodybganim 1s 1 forwards ease-in 2s; /* IE 10+, Fx 29+ */
-    }
-
-    body app .blob .dot {
-      background-color: #fff;
-      width: 30px;
-      height: 30px;
-      position: absolute;
-      left: 0px;
-      top: 0px;
-      -webkit-animation: pulsedot 1s infinite ease-out; /* Safari 4+ */
-      -moz-animation:    pulsedot 1s infinite ease-out; /* Fx 5+ */
-      -o-animation:      pulsedot 1s infinite ease-out; /* Opera 12+ */
-      animation:         pulsedot 1s infinite ease-out; /* IE 10+, Fx 29+ */
-      -webkit-border-radius: 100px;
-      -moz-border-radius: 100px;
-      border-radius: 100px;
-      -webkit-transform: scale(0.1);
-      -moz-transform: scale(0.1);
-      -ms-transform: scale(0.1);
-      -o-transform: scale(0.1);
-      transform: scale(0.1);
-    }
   </style>
 </head>
 <body>
   <app-root>
     <div class="blob">
-      <div class="dot"></div>
+      <!--<div class="dot"></div>-->
+      <img src="assets/loading-logo-opt.gif" width="400" height="400" alt="Loading Gif">
     </div>
   </app-root>
 </body>

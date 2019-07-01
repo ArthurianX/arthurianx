@@ -21,6 +21,9 @@ import { PlayComponent } from './containers/play/play.component';
 import { TerrainCreatorComponent } from './components/terrain-creator/terrain-creator.component';
 import { AssetLoaderComponent } from './components/asset-loader/asset-loader.component';
 import { TriangleComponent } from './containers/triangle/triangle.component';
+import { HomeComponent } from './containers/home/home.component';
+import { AnimationControllerService } from './services/animation.controller.service';
+import { HomeSceneComponent } from './components/home-scene/home-scene.component';
 
 @NgModule({
   declarations: [
@@ -36,7 +39,9 @@ import { TriangleComponent } from './containers/triangle/triangle.component';
     AppComponent,
     StoryComponent,
     IntroComponent,
-    EnvironmentComponent
+    EnvironmentComponent,
+    HomeSceneComponent,
+    HomeComponent
   ],
   imports: [
     BrowserModule,
@@ -47,7 +52,9 @@ import { TriangleComponent } from './containers/triangle/triangle.component';
     LottieAnimationViewModule,
     FlexLayoutModule
   ],
-  providers: [],
+  providers: [
+    AnimationControllerService
+  ],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

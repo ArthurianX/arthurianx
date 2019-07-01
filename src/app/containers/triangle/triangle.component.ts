@@ -2,10 +2,11 @@ import { AfterViewInit, Component, ElementRef, EventEmitter, OnInit, ViewChild }
 import * as _ from 'lodash';
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 import { throttleTime } from 'rxjs/operators';
-import { TweenLite, TimelineLite, Power2 } from 'gsap';
+import { TweenLite, TweenMax, TimelineLite, Power2 } from 'gsap';
 
 import { KawaseBlurFilter, AdjustmentFilter, CRTFilter, AdjustmentOptions, CRTOptions } from 'pixi-filters';
 import PIXIGlowFilter from '../../pixi-filters/glow';
+import ParticleContainer = PIXI.ParticleContainer;
 
 
 @Component({
@@ -17,6 +18,7 @@ export class TriangleComponent implements AfterViewInit {
   loader: PIXI.Loader = PIXI.Loader.shared;
   @ViewChild('triangleBg', {static: true}) triangleBgRef: ElementRef;
   @ViewChild('triangle', {static: true}) triangleRef: ElementRef;
+  @ViewChild('logoTriangle', {static: true}) triangleLogoRef: ElementRef;
   public triCoordGenerated: {x: number; y: number}[][] = [];
   public triangleSprites: any[] = [];
   private triangleCoordinates: any[] = [];
@@ -56,7 +58,7 @@ export class TriangleComponent implements AfterViewInit {
     stageFilters: boolean
   } = {
     trailMode: false,
-    drawingMode: true,
+    drawingMode: false,
     staticAnimation: false,
     stageFilters: false
   };
@@ -64,6 +66,11 @@ export class TriangleComponent implements AfterViewInit {
   private app: PIXI.Application;
   private particlesContainer: PIXI.ParticleContainer;
   private tickerValue: number;
+  private logoTriangle: {
+    r?: PIXI.Sprite;
+    g?: PIXI.Sprite;
+    b?: PIXI.Sprite;
+  } = {};
 
 
   constructor() {
@@ -105,10 +112,11 @@ export class TriangleComponent implements AfterViewInit {
 
   public loaderComplete(loader, res) {
     // NOTE: All the important things happen here.
-    this.calculateAddSprites(res);
-    this.staticTriangleAnimations();
-    this.startMouseEventStream(this.app);
-    this.addFiltersToStage(this.app);
+    // this.calculateAddSprites(res);
+    // this.staticTriangleAnimations();
+    // this.startMouseEventStream(this.app);
+    // this.addFiltersToStage(this.app);
+    this.addLogoTriangle(res);
     // NOTE ^: All the important things happen here.
 
     this.app.ticker.add(this.PIXIticker.bind(this));
@@ -144,6 +152,10 @@ export class TriangleComponent implements AfterViewInit {
     this.loader
         .add('triangle', 'assets/story/triangle.png')
         .add('triangle_rev', 'assets/story/triangle-down.png')
+        .add('triangle_logo', 'assets/triangle-logo.png')
+        .add('triangle_logo_r', 'assets/triangle-logo-r.png')
+        .add('triangle_logo_g', 'assets/triangle-logo-g.png')
+        .add('triangle_logo_b', 'assets/triangle-logo-b.png')
         .load(this.loaderComplete.bind(this));
   }
 
@@ -406,5 +418,42 @@ export class TriangleComponent implements AfterViewInit {
   private addFiltersToStage(app: PIXI.Application) {
     if (!this.toggles.stageFilters) { return false; }
     app.stage.filters = [this.filters.adjustment, this.filters.crt];
+  }
+
+  private addLogoTriangle(res) {
+    this.logoTriangle.r = PIXI.Sprite.from(res.triangle_logo_r.url);
+    this.logoTriangle.g = PIXI.Sprite.from(res.triangle_logo_b.url);
+    this.logoTriangle.b = PIXI.Sprite.from(res.triangle_logo_g.url);
+
+    this.logoTriangle.r.blendMode = PIXI.BLEND_MODES.ADD;
+    this.logoTriangle.g.blendMode = PIXI.BLEND_MODES.ADD;
+    this.logoTriangle.b.blendMode = PIXI.BLEND_MODES.ADD;
+
+    this.logoTriangle.r.scale.x = 0.4;
+    this.logoTriangle.r.scale.y = 0.4;
+    this.logoTriangle.g.scale.x = 0.4;
+    this.logoTriangle.g.scale.y = 0.4;
+    this.logoTriangle.b.scale.x = 0.4;
+    this.logoTriangle.b.scale.y = 0.4;
+
+    // console.log(this.logoTriangle)
+
+    const position = {
+      x: window.innerWidth,
+      y: window.innerHeight
+    };
+    // this.logoTriangle.r.position.x = position.x;
+    // this.logoTriangle.r.position.y = position.y;
+    // this.logoTriangle.g.position.x = position.x;
+    // this.logoTriangle.g.position.y = position.y;
+    // this.logoTriangle.b.position.x = position.x;
+    // this.logoTriangle.b.position.y = position.y;
+
+    TweenMax.to(this.logoTriangle.r.position, 0.5, {x: this.randint(1, 50), y: this.randint(1, 50), repeat: -1}).yoyo();
+    TweenMax.to(this.logoTriangle.g.position, 0.5, {x: this.randint(1, 50), y: this.randint(1, 50), repeat: -1}).yoyo();
+    TweenMax.to(this.logoTriangle.b.position, 0.5, {x: this.randint(1, 0), y: this.randint(1, 50), repeat: -1}).yoyo();
+
+    this.app.stage.addChild(this.logoTriangle.r, this.logoTriangle.b, this.logoTriangle.g);
+
   }
 }

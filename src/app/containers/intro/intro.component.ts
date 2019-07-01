@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AnimationControllerService } from '../../services/animation.controller.service';
 
 @Component({
   selector: 'app-intro',
@@ -8,12 +9,13 @@ import { Router } from '@angular/router';
 })
 export class IntroComponent implements OnInit {
 
-  constructor(public router: Router) { }
+  constructor(public router: Router, public animService: AnimationControllerService) { }
 
   ngOnInit() {
   }
 
   public introDone($event: any) {
-    this.router.navigate(['story']);
+    this.animService.setCurrentAnimation(1);
+    this.router.navigate(['home']);
   }
 }
