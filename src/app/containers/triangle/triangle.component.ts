@@ -1,4 +1,4 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import * as _ from 'lodash';
 import GraphicsSVG from '../../services/pixi-svg/SVG';
 import { throttleTime } from 'rxjs/operators';
@@ -7,6 +7,8 @@ import { TweenLite, TweenMax, TimelineLite, Power2 } from 'gsap';
 import { KawaseBlurFilter, AdjustmentFilter, CRTFilter, AdjustmentOptions, CRTOptions } from 'pixi-filters';
 import PIXIGlowFilter from '../../pixi-filters/glow';
 import ParticleContainer = PIXI.ParticleContainer;
+import { Router } from '@angular/router';
+import { AnimationControllerService } from '../../services/animation.controller.service';
 
 
 @Component({
@@ -14,7 +16,7 @@ import ParticleContainer = PIXI.ParticleContainer;
   templateUrl: './triangle.component.html',
   styleUrls: ['./triangle.component.sass']
 })
-export class TriangleComponent implements AfterViewInit {
+export class TriangleComponent implements AfterViewInit, OnDestroy {
   loader: PIXI.Loader = PIXI.Loader.shared;
   @ViewChild('triangleBg', {static: true}) triangleBgRef: ElementRef;
   @ViewChild('triangle', {static: true}) triangleRef: ElementRef;
@@ -57,10 +59,10 @@ export class TriangleComponent implements AfterViewInit {
     trailMode: boolean
     stageFilters: boolean
   } = {
-    trailMode: false,
+    trailMode: true,
     drawingMode: false,
-    staticAnimation: false,
-    stageFilters: false
+    staticAnimation: true,
+    stageFilters: true
   };
   public entryTriangle: PIXI.Sprite;
   private app: PIXI.Application;
@@ -73,7 +75,9 @@ export class TriangleComponent implements AfterViewInit {
   } = {};
 
 
-  constructor() {
+  constructor(
+      public router: Router, public animService: AnimationControllerService
+  ) {
     this.mousePositionStream
         .pipe( throttleTime(50) )
         .subscribe((res) => {
@@ -112,11 +116,11 @@ export class TriangleComponent implements AfterViewInit {
 
   public loaderComplete(loader, res) {
     // NOTE: All the important things happen here.
-    // this.calculateAddSprites(res);
-    // this.staticTriangleAnimations();
-    // this.startMouseEventStream(this.app);
-    // this.addFiltersToStage(this.app);
-    this.addLogoTriangle(res);
+    this.calculateAddSprites(res);
+    this.staticTriangleAnimations();
+    this.startMouseEventStream(this.app);
+    this.addFiltersToStage(this.app);
+    // this.addLogoTriangle(res);
     // NOTE ^: All the important things happen here.
 
     this.app.ticker.add(this.PIXIticker.bind(this));
@@ -157,6 +161,14 @@ export class TriangleComponent implements AfterViewInit {
         .add('triangle_logo_g', 'assets/triangle-logo-g.png')
         .add('triangle_logo_b', 'assets/triangle-logo-b.png')
         .load(this.loaderComplete.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    setTimeout(() => {
+      this.loader.reset();
+      this.app.stop();
+      this.app.destroy(true, {children: true, texture: true});
+    }, 700);
   }
 
   private generateTriangleCoordinates() {
@@ -404,7 +416,8 @@ export class TriangleComponent implements AfterViewInit {
 
   private clickedEntryTriangle() {
     console.log('entry triangle clicked', this.entryTriangle);
-    window.location.reload();
+    this.animService.setCurrentAnimation(3);
+    this.router.navigate(['home']);
   }
 
   private randint(min, max): number {

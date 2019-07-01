@@ -1,3 +1,11 @@
 <div>
     <canvas #homeScene id="homeScene"></canvas>
+    <div class="sound-volume">
+        <button *ngIf="!soundPlaying" (click)="volumeToggle(true)" mat-icon-button color="accent" aria-label="Example icon-button with a heart icon">
+            <mat-icon>volume_off</mat-icon>
+        </button>
+        <button *ngIf="soundPlaying" (click)="volumeToggle(false)" mat-icon-button color="accent" aria-label="Example icon-button with a heart icon">
+            <mat-icon>volume_up</mat-icon>
+        </button>
+    </div>
 </div>

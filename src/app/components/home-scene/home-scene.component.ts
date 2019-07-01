@@ -1,8 +1,8 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { throttleTime } from 'rxjs/operators';
 import { TweenLite, TweenMax, TimelineLite, Power2 } from 'gsap/all';
-import { CRTFilter, CRTOptions, OutlineFilter, BloomFilter } from 'pixi-filters';
-import PIXIGlowFilter from '../../pixi-filters/glow';
+import { BloomFilter, AdjustmentFilter, AdjustmentOptions } from 'pixi-filters';
+import 'pixi-sound';
 
 
 @Component({
@@ -11,11 +11,13 @@ import PIXIGlowFilter from '../../pixi-filters/glow';
   templateUrl: './home-scene.component.html',
   styleUrls: ['./home-scene.component.sass']
 })
-export class HomeSceneComponent implements AfterViewInit {
+export class HomeSceneComponent implements AfterViewInit, OnDestroy {
+  @Output() public navigation: EventEmitter<string> = new EventEmitter();
   loader: PIXI.Loader = PIXI.Loader.shared;
   @ViewChild('homeScene', {static: true}) homeSceneRef: ElementRef;
   public mousePositionStream: EventEmitter<any> = new EventEmitter();
   public tickerStream: EventEmitter<any> = new EventEmitter();
+  public soundPlaying = true;
 
   public globalCursorPosition: {
     x: number;
@@ -28,7 +30,9 @@ export class HomeSceneComponent implements AfterViewInit {
 
   private app: PIXI.Application;
   private tickerValue: number;
+  private backgroundVideoRef: any;
   private backgroundSprite: PIXI.Sprite;
+  private backgroundSound: PIXI.sound.Sound;
   private lab: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite };
   private me: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite };
   private work: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite };
@@ -58,8 +62,7 @@ export class HomeSceneComponent implements AfterViewInit {
   }
 
   public loaderComplete(loader, res) {
-    this.backgroundSprite = PIXI.Sprite.from(res.nature.url);
-    this.app.stage.addChild(this.backgroundSprite);
+    this.addVideoBackground(res);
     this.makeMenu(res);
     this.startMouseEventStream(this.app);
     this.app.start();
@@ -93,6 +96,8 @@ export class HomeSceneComponent implements AfterViewInit {
 
     this.loader
         .add('nature', 'assets/home-scene/nature.jpg')
+        .add('sound', 'assets/home-scene/spring-meadow.wav')
+        .add('video', 'assets/home-scene/grass.mp4')
         .add('lab_r', 'assets/home-scene/lab-r.png')
         .add('lab_g', 'assets/home-scene/lab-g.png')
         .add('lab_b', 'assets/home-scene/lab-b.png')
@@ -103,6 +108,19 @@ export class HomeSceneComponent implements AfterViewInit {
         .add('work_g', 'assets/home-scene/work-g.png')
         .add('work_b', 'assets/home-scene/work-b.png')
         .load(this.loaderComplete.bind(this));
+  }
+
+  ngOnDestroy(): void {
+    setTimeout(() => {
+      this.loader.reset();
+      this.app.stop();
+      this.app.destroy(true, {children: true, texture: true});
+      this.containers.lab.destroy({children: true, texture: true, baseTexture: true});
+      this.containers.me.destroy({children: true, texture: true, baseTexture: true});
+      this.containers.work.destroy({children: true, texture: true, baseTexture: true});
+      this.backgroundSprite.destroy({children: true, texture: true});
+      // Sound is being destroyed in its own emit navigation loop
+    }, 700);
   }
 
   private startMouseEventStream(app) {
@@ -123,14 +141,18 @@ export class HomeSceneComponent implements AfterViewInit {
     };
 
     const calculateMenuWidth = (size) => {
-      if (size[0] * 3 > window.innerWidth - size[0]) {
-        // Resize the menus
-        size[0] = window.innerWidth / 4;
-        size[1] = size[0] / ratio;
-        return size;
-      } else {
-        return size;
-      }
+      // if (size[0] * 3 > window.innerWidth - size[0]) {
+      //   // Resize the menus
+      //   size[0] = window.innerWidth / 4;
+      //   size[1] = size[0] / ratio;
+      //   return size;
+      // } else {
+      //   return size;
+      // }
+
+      size[0] = window.innerWidth / 6;
+      size[1] = size[0] / ratio;
+      return size;
     };
 
     function resize(obj: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite }, mcs: number[]) {
@@ -211,10 +233,10 @@ export class HomeSceneComponent implements AfterViewInit {
       multiplier = 2.5;
     }
     const aniMenu = (obj, anchor) => {
-      let posX1 = anchor.x - 3 * multiplier;
-      let posX2 = anchor.x + 3 * multiplier;
-      let posY1 = anchor.y + 3 * multiplier;
-      let posY2 = anchor.y - 3 * multiplier;
+      let posX1 = anchor.x - 5 * multiplier;
+      let posX2 = anchor.x + 5 * multiplier;
+      let posY1 = anchor.y + 5 * multiplier;
+      let posY2 = anchor.y - 5 * multiplier;
       if (cursor.x > anchor.x) {
         posX2 = anchor.x; // Means the mouse is on the right, the layers should move to left
       } else {
@@ -231,7 +253,7 @@ export class HomeSceneComponent implements AfterViewInit {
       const y = () => this.randint(posY1, posY2);
       // streamInterval is in miliseconds
       // NOTE: Not all the layers must move
-      // TweenLite.to(obj.r.position, 1 / (streamInterval / 100), { x: x(), y: y() });
+      TweenLite.to(obj.r.position, 1 / (streamInterval / 100), { x: x(), y: y() });
       TweenLite.to(obj.g.position, 1 / (streamInterval / 100), { x: x(), y: y() });
       TweenLite.to(obj.b.position, 1 / (streamInterval / 100), { x: x(), y: y() });
     };
@@ -286,5 +308,50 @@ export class HomeSceneComponent implements AfterViewInit {
 
   private startNavigation(place: 'lab' | 'me' | 'work') {
     console.log('Navigate to ', place);
+    this.navigation.emit(place);
+    TweenLite.to(this.backgroundSound, 2, { volume: 0, onComplete: () => {
+        this.backgroundSound.stop();
+        this.backgroundSound.destroy();
+      }});
+  }
+
+  private addVideoBackground(res: any) {
+    // this.backgroundSprite = PIXI.Sprite.from(res.nature.url);
+    const videoCont = new PIXI.Container();
+    this.backgroundVideoRef = document.createElement('video');
+    this.backgroundVideoRef.preload = 'auto';
+    this.backgroundVideoRef.loop = true;              // enable looping
+    this.backgroundVideoRef.src = res.video.url;
+
+    this.backgroundSound = PIXI.sound.Sound.from({
+      url: res.sound.url,
+      autoPlay: this.soundPlaying,
+      complete: () => {
+        console.log('Sound finished');
+      }
+    });
+
+    // const videoTexture = PIXI.Texture.from(res.video.url);
+    const videoTexture = PIXI.Texture.from(this.backgroundVideoRef);
+    this.backgroundSprite = new PIXI.Sprite(videoTexture);
+    this.backgroundSprite.width = this.app.screen.width;
+    this.backgroundSprite.height = this.app.screen.height;
+
+    videoCont.addChild(this.backgroundSprite);
+    videoCont.filters = [
+      new AdjustmentFilter({gamma: 0.8, contrast: 1, saturation: 1, brightness: 0.5, red: 1, green: 1, blue: 1, alpha: 1} as AdjustmentOptions)
+    ];
+
+    this.app.stage.addChild(videoCont);
+  }
+
+  volumeToggle(b: boolean) {
+    if (!b) {
+      this.backgroundSound.stop();
+      this.soundPlaying = false;
+    } else {
+      this.backgroundSound.play();
+      this.soundPlaying = true;
+    }
   }
 }

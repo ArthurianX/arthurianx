@@ -28,10 +28,12 @@
               "src/assets"
             ],
             "styles": [
+              "./node_modules/@angular/material/prebuilt-themes/pink-bluegrey.css",
               "src/styles.sass"
             ],
             "scripts": [
-              "./pixi.js/dist/pixi.js"
+              "./pixi.js/dist/pixi.js",
+              "./node_modules/pixi-sound/dist/pixi-sound.js"
             ]
           },
           "configurations": {
@@ -90,6 +92,7 @@
               "src/assets"
             ],
             "styles": [
+              "./node_modules/@angular/material/prebuilt-themes/pink-bluegrey.css",
               "src/styles.sass"
             ],
             "scripts": []
@@ -156,6 +159,7 @@
           }
         }
       }
-    }},
+    }
+  },
   "defaultProject": "arthurianx"
 }

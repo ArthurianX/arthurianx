@@ -1,8 +1,10 @@
-import { AfterViewInit, Component, ElementRef, HostListener, OnInit, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 
 import { Loader } from 'pixi.js';
 import { Subject } from 'rxjs';
 import { GlobalDate } from '../../interfaces/environment.interface';
+import { Router } from '@angular/router';
+import { AnimationControllerService } from '../../services/animation.controller.service';
 
 @Component({
   selector: 'app-story',
@@ -10,7 +12,7 @@ import { GlobalDate } from '../../interfaces/environment.interface';
   styleUrls: ['./story.component.sass']
 })
 
-export class StoryComponent implements OnInit, AfterViewInit {
+export class StoryComponent implements OnInit, AfterViewInit, OnDestroy {
   public globalAssets: Subject<any[]> = new Subject();
   public globalSpeed: number;
   public showDial = false;
@@ -29,7 +31,9 @@ export class StoryComponent implements OnInit, AfterViewInit {
       this.pauseStory($event);
     }
   }
-  constructor() {
+  constructor(
+      public router: Router, public animService: AnimationControllerService
+  ) {
     this.loader = PIXI.Loader.shared;
     this.ticker = PIXI.Ticker.shared;
     this.ticker.autoStart = false;
@@ -43,6 +47,16 @@ export class StoryComponent implements OnInit, AfterViewInit {
   ngAfterViewInit() {
     // Break the ExpressionChangedAfterItHasBeenCheckedError Error by just delaying it.
     setTimeout(() => this.initWorld());
+  }
+
+  ngOnDestroy(): void {
+    setTimeout(() => {
+      this.loader.reset();
+      this.app.stop();
+      this.app.destroy(true, {children: true, texture: true});
+      this.ticker.stop();
+      this.ticker.destroy();
+    }, 700);
   }
 
   public initWorld() {
@@ -98,5 +112,10 @@ export class StoryComponent implements OnInit, AfterViewInit {
 
   setGlobalDate($event: GlobalDate) {
     console.log('Date is ', `${$event.year} - ${$event.month} - moving ${$event.direction}`);
+  }
+
+  backToMainMenu() {
+    this.animService.setCurrentAnimation(2);
+    this.router.navigate(['home']);
   }
 }

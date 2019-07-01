@@ -24,6 +24,7 @@ import { TriangleComponent } from './containers/triangle/triangle.component';
 import { HomeComponent } from './containers/home/home.component';
 import { AnimationControllerService } from './services/animation.controller.service';
 import { HomeSceneComponent } from './components/home-scene/home-scene.component';
+import { MatButtonModule, MatIconModule, MatRippleModule } from '@angular/material';
 
 @NgModule({
   declarations: [
@@ -50,7 +51,10 @@ import { HomeSceneComponent } from './components/home-scene/home-scene.component
     ReactiveFormsModule,
     AppRoutingModule,
     LottieAnimationViewModule,
-    FlexLayoutModule
+    FlexLayoutModule,
+    MatIconModule,
+    MatButtonModule,
+    MatRippleModule
   ],
   providers: [
     AnimationControllerService
