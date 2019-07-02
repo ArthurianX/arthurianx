@@ -1,6 +1,6 @@
 <div>
     <canvas #homeScene id="homeScene"></canvas>
-    <div class="sound-volume">
+    <div class="sound-volume" *ngIf="showPage">
         <button *ngIf="!soundPlaying" (click)="volumeToggle(true)" mat-icon-button color="accent" aria-label="Example icon-button with a heart icon">
             <mat-icon>volume_off</mat-icon>
         </button>
@@ -11,4 +11,6 @@
     <span style="display: none">
         <video #homeVideo id="homeVideo"></video>
     </span>
+    <asset-loader [fileList]="filesToLoad" (loadingComplete)="loaderComplete($event)"></asset-loader>
 </div>
+

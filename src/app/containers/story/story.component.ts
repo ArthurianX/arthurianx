@@ -20,6 +20,19 @@ export class StoryComponent implements OnInit, AfterViewInit, OnDestroy {
   public appRunning = false;
   public loader: Loader = Loader.shared;
   public ticker: PIXI.Ticker;
+  public filesToLoad = [
+    ['pixie', 'assets/demo-story/pixie/pixie.json'],
+    ['months', 'assets/months/months.png'],
+    ['sky1', 'assets/story/sky/sky1.jpg'],
+    ['sky2', 'assets/story/sky/sky2.jpg'],
+    ['sky3', 'assets/story/sky/sky3.jpg'],
+    ['sky4', 'assets/story/sky/sky4.jpg'],
+    ['sky5', 'assets/story/sky/sky5.jpg'],
+    ['sun', 'assets/story/sky/sun.png'],
+    ['sun1', 'assets/story/sky/sun.png'],
+    ['displacement_map', 'assets/story/soil/displacement_map_repeat.jpg'],
+    ['ground', 'assets/story/soil/soil-tile.png']
+  ];
 
   // PIXI Canvas DOM Element Ref
   @ViewChild('pixiBackground', {static: false}) bgContainerRef: ElementRef;

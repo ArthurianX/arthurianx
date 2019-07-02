@@ -8,6 +8,7 @@ import { AnimationControllerService } from '../../services/animation.controller.
   styleUrls: ['./home.component.sass']
 })
 export class HomeComponent implements OnInit {
+  private showHire = false;
 
   constructor(public router: Router, public animService: AnimationControllerService) { }
 
@@ -30,4 +31,8 @@ export class HomeComponent implements OnInit {
         break;
     }
   }
+
+    showCalendar() {
+        this.showHire = true;
+    }
 }

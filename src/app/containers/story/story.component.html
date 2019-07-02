@@ -1,6 +1,6 @@
 <div>
   <dial-animation *ngIf="showDial" (dialSpeed)="receiveDialSpeed($event)" (pauseApp)="pauseStory($event)"></dial-animation>
-  <asset-loader [loader]="loader" (loadingComplete)="allAssetsLoaded($event)"></asset-loader>
+  <asset-loader [fileList]="filesToLoad" (loadingComplete)="allAssetsLoaded($event)"></asset-loader>
   <environment
           [app]="app"
           [sharedTicker]="ticker"

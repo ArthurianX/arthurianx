@@ -13,9 +13,24 @@ import 'pixi-sound';
 })
 export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     @Output() public navigation: EventEmitter<string> = new EventEmitter();
-    loader: PIXI.Loader = new PIXI.Loader();
+    @Output() public showText: EventEmitter<string> = new EventEmitter();
     @ViewChild('homeScene', {static: true}) homeSceneRef: ElementRef;
     @ViewChild('homeVideo', {static: true}) homeVideoRef: ElementRef;
+    public filesToLoad = [
+        ['nature', 'assets/home-scene/nature.jpg'],
+        ['sound', 'assets/home-scene/spring-meadow.wav'],
+        ['broken_sound', 'assets/home-scene/loop_neonlight_buzz_03.ogg'],
+        ['video', 'assets/home-scene/grass.mp4'],
+        ['lab_r', 'assets/home-scene/lab-r.png'],
+        ['lab_g', 'assets/home-scene/lab-g.png'],
+        ['lab_b', 'assets/home-scene/lab-b.png'],
+        ['me_r', 'assets/home-scene/me-r.png'],
+        ['me_g', 'assets/home-scene/me-g.png'],
+        ['me_b', 'assets/home-scene/me-b.png'],
+        ['work_r', 'assets/home-scene/work-r.png'],
+        ['work_g', 'assets/home-scene/work-g.png'],
+        ['work_b', 'assets/home-scene/work-b.png'],
+    ];
     public videoTexture: PIXI.Texture;
     public mousePositionStream: EventEmitter<any> = new EventEmitter();
     public tickerStream: EventEmitter<any> = new EventEmitter();
@@ -32,7 +47,6 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
 
     private app: PIXI.Application;
     private tickerValue: number;
-    private backgroundVideoRef: any;
     private backgroundSprite: PIXI.Sprite;
     private backgroundSound: PIXI.sound.Sound;
     private brokenSound: PIXI.sound.Sound;
@@ -43,6 +57,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     private anchors: { work: { x: number; y: number }; me: { x: number; y: number }; lab: { x: number; y: number } };
     private videoCont: PIXI.Container;
     private videoGlitch: any;
+    private showPage = false;
 
 
     constructor() {
@@ -67,7 +82,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
         this.tickerStream.next(time);
     }
 
-    public loaderComplete(loader, res) {
+    public loaderComplete(res) {
         this.addVideoBackground(res);
         this.makeMenu(res);
         this.startMouseEventStream(this.app);
@@ -77,7 +92,10 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
         // Start the ticker with a little delay to the users can see the buttons
         setTimeout(() => {
             this.app.ticker.add(this.PIXIticker.bind(this));
+            this.showText.emit();
         }, 1500);
+        this.showPage = true;
+
     }
 
     ngAfterViewInit(): void {
@@ -97,29 +115,11 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
         // renderer.resize(window.innerWidth - 1, window.innerHeight);
         // renderer.resize(window.innerWidth, window.innerHeight );
         // renderer.plugins.interaction.resolution = window.devicePixelRatio;
-
         this.app.stop();
-
-        this.loader
-            .add('nature', 'assets/home-scene/nature.jpg')
-            .add('sound', 'assets/home-scene/spring-meadow.wav')
-            .add('broken_sound', 'assets/home-scene/loop_neonlight_buzz_03.ogg')
-            .add('video', 'assets/home-scene/grass.mp4')
-            .add('lab_r', 'assets/home-scene/lab-r.png')
-            .add('lab_g', 'assets/home-scene/lab-g.png')
-            .add('lab_b', 'assets/home-scene/lab-b.png')
-            .add('me_r', 'assets/home-scene/me-r.png')
-            .add('me_g', 'assets/home-scene/me-g.png')
-            .add('me_b', 'assets/home-scene/me-b.png')
-            .add('work_r', 'assets/home-scene/work-r.png')
-            .add('work_g', 'assets/home-scene/work-g.png')
-            .add('work_b', 'assets/home-scene/work-b.png')
-            .load(this.loaderComplete.bind(this));
     }
 
     ngOnDestroy(): void {
         setTimeout(() => {
-            this.loader.reset();
             this.app.stop();
             this.app.destroy(true, {children: true, texture: true});
             this.containers.lab.destroy({children: true, texture: true, baseTexture: true});
@@ -306,22 +306,12 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
         this.containers.lab.filters = [];
         this.containers.me.filters = [];
         this.containers.work.filters = [];
-        this.videoCont.filters.map( (ele, idx) => {
+        this.videoCont.filters.map((ele, idx) => {
             if (ele == this.videoGlitch) {
                 this.videoCont.filters.splice(idx, 1);
                 this.brokenSound.stop();
             }
         });
-        // Event Target is not immediately received, so we break it in async.
-        // setTimeout(() => {
-        //   if (event.target == this.containers.lab) {
-        //     this.containers.lab.filters = [];
-        //   } else if (event.target == this.containers.me) {
-        //     this.containers.me.filters = [];
-        //   } else if (event.target == this.containers.work) {
-        //     this.containers.work.filters = [];
-        //   }
-        // }, 150);
     }
 
     private onMouseDown(event) {
@@ -356,7 +346,6 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     }
 
     private addVideoBackground(res: any) {
-        console.log(res);
         // this.backgroundSprite = PIXI.Sprite.from(res.nature.url);
         this.videoCont = new PIXI.Container();
         /* Load video from document tag */
@@ -398,7 +387,16 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
         );
         this.videoCont.addChild(this.backgroundSprite);
         this.videoCont.filters = [
-            new AdjustmentFilter({gamma: 0.8, contrast: 1, saturation: 1, brightness: 1, red: 1, green: 1, blue: 1, alpha: 1} as AdjustmentOptions),
+            new AdjustmentFilter({
+                gamma: 0.8,
+                contrast: 1,
+                saturation: 1,
+                brightness: 1,
+                red: 1,
+                green: 1,
+                blue: 1,
+                alpha: 1
+            } as AdjustmentOptions),
             crtF,
             // asciiF
         ];

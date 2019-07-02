@@ -1,4 +1,5 @@
 import {
+  AfterViewInit,
   Component, EventEmitter, Input, OnDestroy, OnInit, Output, ViewEncapsulation
 } from '@angular/core';
 
@@ -12,29 +13,38 @@ import { Loader } from 'pixi.js';
   templateUrl: './asset-loader.component.html'
 })
 
-export class AssetLoaderComponent implements OnDestroy {
+export class AssetLoaderComponent implements OnInit, OnDestroy {
 
   @Output() public animComplete = new EventEmitter();
   @Output() public loadingComplete: EventEmitter<any[]> = new EventEmitter();
-  @Input() public loader: Loader;
+  @Input() public fileList: any[];
+  @Input() public delayedStart = false;
 
+  public loader: Loader;
   public lottieConfig: {};
   public loadingFinished = false;
   private anim: any;
   private loadingPercentage: number;
 
   constructor() {
-
+    this.loader = new PIXI.Loader();
     this.lottieConfig = {
       path: 'assets/animations/circle_loading.json',
       autoplay: false,
       loop: false
     };
+  }
 
+  public ngOnInit(): void {
+    this.fileList.map( (file) => {
+      console.log('loader add', file[0], file[1]);
+      this.loader.add(file[0], file[1]);
+    });
   }
 
   public ngOnDestroy() {
     this.anim.removeEventListener('complete');
+    this.loader.reset();
   }
 
   public startLoading() {
@@ -44,34 +54,17 @@ export class AssetLoaderComponent implements OnDestroy {
     }
 
     this.loader
-        .add('pixie', 'assets/demo-story/pixie/pixie.json')
-        .add('months', 'assets/months/months.png')
-        // good stuff below
-        .add('sky1', 'assets/story/sky/sky1.jpg')
-        .add('sky2', 'assets/story/sky/sky2.jpg')
-        .add('sky3', 'assets/story/sky/sky3.jpg')
-        .add('sky4', 'assets/story/sky/sky4.jpg')
-        .add('sky5', 'assets/story/sky/sky5.jpg')
-        .add('sun', 'assets/story/sky/sun.png')
-        .add('sun1', 'assets/story/sky/sun.png')
-        .add('displacement_map', 'assets/story/soil/displacement_map_repeat.jpg')
-        .add('ground', 'assets/story/soil/soil-tile.png')
         .on('progress', (inst) => {
           this.playAnimation(Math.floor(inst.progress));
           this.loadingPercentage = Math.floor(inst.progress);
           // console.log('this.loadingPercentage', Math.floor(inst.progress));
         })
         .load(this.loaderComplete.bind(this));
-    // let val = 0;
-    // setInterval( () => {
-    //   val += 1;
-    //   this.playAnimation(Math.floor(val));
-    //   this.loadingPercentage = Math.floor(val);
-    // }, 500);
   }
 
   public loaderComplete(loader, res) {
     this.loadingComplete.emit(res);
+    this.loader.reset();
     // this.anim.setSpeed(1);
   }
 
@@ -89,9 +82,9 @@ export class AssetLoaderComponent implements OnDestroy {
     // 16 is 100%
     // x is percent param
     this.anim.goToAndStop(Math.ceil((120 * percent) / 100), true);
-    // if (percent === 100) {
-    //   // Play until the end
-    //   this.anim.play();
-    // }
+    if (percent === 100) {
+      // Play until the end
+      this.anim.play();
+    }
   }
 }
