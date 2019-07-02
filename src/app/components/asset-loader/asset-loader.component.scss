@@ -1,16 +1,38 @@
 :host {
 
   .progress-animation {
-    span {
+    position: absolute;
+    width: 500px;
+    height: 500px;
+    left: 50%;
+    top: 50%;
+    margin: -250px 0 0 -250px;
+    img {
+      width: 400px;
+      height: 400px;
       position: absolute;
-      left: 50%;
-      top: 50%;
-      color: #fff;
-      font-size: 32px;
-      font-family: "Helvetica Neue", arial, sans-serif;
-      margin-left: -20px;
-      margin-top: -46px;
+      top: 50px;
+      left: 50px;
+      z-index: 9;
     }
+    lottie-animation-view {
+      width: 500px;
+      height: 500px;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 99;
+    }
+    //span {
+    //  position: absolute;
+    //  left: 50%;
+    //  top: 50%;
+    //  color: #fff;
+    //  font-size: 32px;
+    //  font-family: "Helvetica Neue", arial, sans-serif;
+    //  margin-left: -20px;
+    //  margin-top: -46px;
+    //}
   }
 
 }

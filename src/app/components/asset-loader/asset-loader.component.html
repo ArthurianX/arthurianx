@@ -2,10 +2,10 @@
      fxFill fxLayout="row"
      fxLayoutAlign="center center">
   <lottie-animation-view
-    fxFlex="20"
-    [style.height]="'200px'"
+    [style.height]="'500px'"
+    [style.width]="'500px'"
     [options]="lottieConfig"
     (animCreated)="handleAnimation($event)">
   </lottie-animation-view>
-  <span *ngIf="loadingPercentage < 100">{{loadingPercentage}}</span>
+  <img src="/assets/transparent_logo_loading.gif" alt="">
 </div>

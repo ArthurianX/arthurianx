@@ -26,7 +26,7 @@ export class AssetLoaderComponent implements OnDestroy {
   constructor() {
 
     this.lottieConfig = {
-      path: 'assets/animations/checkmark.json',
+      path: 'assets/animations/circle_loading.json',
       autoplay: false,
       loop: false
     };
@@ -62,6 +62,12 @@ export class AssetLoaderComponent implements OnDestroy {
           // console.log('this.loadingPercentage', Math.floor(inst.progress));
         })
         .load(this.loaderComplete.bind(this));
+    // let val = 0;
+    // setInterval( () => {
+    //   val += 1;
+    //   this.playAnimation(Math.floor(val));
+    //   this.loadingPercentage = Math.floor(val);
+    // }, 500);
   }
 
   public loaderComplete(loader, res) {
@@ -82,10 +88,10 @@ export class AssetLoaderComponent implements OnDestroy {
   private playAnimation(percent: number) {
     // 16 is 100%
     // x is percent param
-    this.anim.goToAndStop(Math.ceil((16 * percent) / 100), true);
-    if (percent === 100) {
-      // Play until the end
-      this.anim.play();
-    }
+    this.anim.goToAndStop(Math.ceil((120 * percent) / 100), true);
+    // if (percent === 100) {
+    //   // Play until the end
+    //   this.anim.play();
+    // }
   }
 }
