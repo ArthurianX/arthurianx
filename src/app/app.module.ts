@@ -25,7 +25,9 @@ import { HomeComponent } from './containers/home/home.component';
 import { AnimationControllerService } from './services/animation.controller.service';
 import { HomeSceneComponent } from './components/home-scene/home-scene.component';
 import { MatButtonModule, MatIconModule, MatRippleModule } from '@angular/material';
+import { HireCalendarComponent } from './components/hire-calendar/hire-calendar.component';
 
+// @ts-ignore
 @NgModule({
   declarations: [
     AssetLoaderComponent,
@@ -41,6 +43,7 @@ import { MatButtonModule, MatIconModule, MatRippleModule } from '@angular/materi
     StoryComponent,
     IntroComponent,
     EnvironmentComponent,
+    HireCalendarComponent,
     HomeSceneComponent,
     HomeComponent
   ],

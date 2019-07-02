@@ -13,8 +13,10 @@ import 'pixi-sound';
 })
 export class HomeSceneComponent implements AfterViewInit, OnDestroy {
   @Output() public navigation: EventEmitter<string> = new EventEmitter();
-  loader: PIXI.Loader = PIXI.Loader.shared;
+  loader: PIXI.Loader = new PIXI.Loader();
   @ViewChild('homeScene', {static: true}) homeSceneRef: ElementRef;
+  @ViewChild('homeVideo', {static: true}) homeVideoRef: ElementRef;
+  public videoTexture: PIXI.Texture;
   public mousePositionStream: EventEmitter<any> = new EventEmitter();
   public tickerStream: EventEmitter<any> = new EventEmitter();
   public soundPlaying = true;
@@ -39,6 +41,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
   private containers: { work: PIXI.Container; me: PIXI.Container; lab: PIXI.Container };
   private anchors: { work: { x: number; y: number }; me: { x: number; y: number }; lab: { x: number; y: number } };
 
+
   constructor() {
     const streamInterval = 100;
     this.mousePositionStream
@@ -49,7 +52,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
           this.globalCursorPosition = res;
         });
     this.tickerStream
-      .pipe( throttleTime(streamInterval) )
+      .pipe( throttleTime(500) )
         .subscribe((time) => {
           this.menusMouseMovement(this.globalCursorPosition, streamInterval);
           this.isMouseMoving = false;
@@ -118,7 +121,8 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
       this.containers.lab.destroy({children: true, texture: true, baseTexture: true});
       this.containers.me.destroy({children: true, texture: true, baseTexture: true});
       this.containers.work.destroy({children: true, texture: true, baseTexture: true});
-      this.backgroundSprite.destroy({children: true, texture: true});
+      this.videoTexture.destroy(true);
+      this.backgroundSprite.destroy({children: true, texture: true, baseTexture: true});
       // Sound is being destroyed in its own emit navigation loop
     }, 700);
   }
@@ -166,7 +170,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
 
     function position(obj: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite }, pos: number) {
       const x = window.innerWidth / 4 * pos;
-      const y = window.innerHeight / 5;
+      const y = window.innerHeight / 3;
       obj.r.position.x = x; obj.r.position.y = y;
       obj.g.position.x = x; obj.g.position.y = y;
       obj.b.position.x = x; obj.b.position.y = y;
@@ -316,24 +320,22 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
   }
 
   private addVideoBackground(res: any) {
+    console.log(res);
     // this.backgroundSprite = PIXI.Sprite.from(res.nature.url);
     const videoCont = new PIXI.Container();
-    this.backgroundVideoRef = document.createElement('video');
-    this.backgroundVideoRef.preload = 'auto';
-    this.backgroundVideoRef.loop = true;              // enable looping
-    this.backgroundVideoRef.src = res.video.url;
+    /* Load video from document tag */
+    this.homeVideoRef.nativeElement.preload = 'auto';
+    this.homeVideoRef.nativeElement.loop = true;              // enable looping
+    this.homeVideoRef.nativeElement.src = res.video.url;
+    this.videoTexture = PIXI.Texture.from(this.homeVideoRef.nativeElement, {resourceOptions: {autoLoad: true, autoPlay: true, updateFPS: 24 }});
+    /* Load video from document tag */
 
-    this.backgroundSound = PIXI.sound.Sound.from({
-      url: res.sound.url,
-      autoPlay: this.soundPlaying,
-      complete: () => {
-        console.log('Sound finished');
-      }
-    });
-
+    /* Load video directly from resource */
     // const videoTexture = PIXI.Texture.from(res.video.url);
-    const videoTexture = PIXI.Texture.from(this.backgroundVideoRef);
-    this.backgroundSprite = new PIXI.Sprite(videoTexture);
+    console.log('videotex', this.videoTexture);
+    /* Load video directly from resource */
+
+    this.backgroundSprite = new PIXI.Sprite(this.videoTexture);
     this.backgroundSprite.width = this.app.screen.width;
     this.backgroundSprite.height = this.app.screen.height;
 
@@ -341,6 +343,17 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     videoCont.filters = [
       new AdjustmentFilter({gamma: 0.8, contrast: 1, saturation: 1, brightness: 0.5, red: 1, green: 1, blue: 1, alpha: 1} as AdjustmentOptions)
     ];
+
+    /* SOUND */
+    this.backgroundSound = PIXI.sound.Sound.from({
+      url: res.sound.url,
+      autoPlay: this.soundPlaying,
+      complete: () => {
+        console.log('Sound finished');
+        // Loop
+        this.backgroundSound.play();
+      }
+    });
 
     this.app.stage.addChild(videoCont);
   }

@@ -33,6 +33,9 @@ ehthumbs.db
 Icon?
 Thumbs.db
 
+# Firebase stuff #
+.firebase
+
 # Node Files #
 /node_modules/
 /bower_components/
