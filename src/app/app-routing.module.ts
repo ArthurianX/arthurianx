@@ -8,8 +8,8 @@ import { TriangleComponent } from './containers/triangle/triangle.component';
 import { HomeComponent } from './containers/home/home.component';
 
 const routes: Routes = [
-  { path: '', pathMatch: 'full', component: IntroComponent, data: {animation: 'Intro'} },
-  { path: 'home',  component: HomeComponent, data: {animation: 'Story'} },
+  { path: '', pathMatch: 'full', component: HomeComponent, data: {animation: 'Intro'} },
+  // { path: 'home',  component: HomeComponent, data: {animation: 'Story'} },
   { path: 'story',  component: StoryComponent, data: {animation: 'Story'} },
   { path: 'play',  component: PlayComponent },
   { path: 'triangle',  component: TriangleComponent },

@@ -129,6 +129,6 @@ export class StoryComponent implements OnInit, AfterViewInit, OnDestroy {
 
   backToMainMenu() {
     this.animService.setCurrentAnimation(2);
-    this.router.navigate(['home']);
+    this.router.navigate(['']);
   }
 }

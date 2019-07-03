@@ -1,8 +1,9 @@
-import { AfterViewInit, Component, ElementRef, EventEmitter, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
+import { AfterViewInit, Component, ElementRef, EventEmitter, HostListener, OnDestroy, OnInit, Output, ViewChild } from '@angular/core';
 import { throttleTime } from 'rxjs/operators';
 import { TweenLite, TweenMax, TimelineLite, Power2 } from 'gsap/all';
 import { BloomFilter, AdjustmentFilter, AdjustmentOptions, AsciiFilter, CRTOptions, CRTFilter, GlitchFilter } from 'pixi-filters';
 import 'pixi-sound';
+import { Subject } from 'rxjs';
 
 
 @Component({
@@ -34,7 +35,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     public videoTexture: PIXI.Texture;
     public mousePositionStream: EventEmitter<any> = new EventEmitter();
     public tickerStream: EventEmitter<any> = new EventEmitter();
-    public soundPlaying = false;
+    public soundPlaying = true;
 
     public globalCursorPosition: {
         x: number;
@@ -58,10 +59,26 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     private videoCont: PIXI.Container;
     private videoGlitch: any;
     private showPage = false;
+    private resizeStream: Subject<any> = new Subject<any>();
+
+    @HostListener('window:resize', ['$event'])
+    public onResize(event) {
+        this.resizeAssets();
+        // TODO: Maybe add a throttle function here ?
+        // this.resizeStream.next();
+    }
 
 
     constructor() {
+
+        // this.resizeStream
+        //     .pipe(throttleTime(500))
+        //     .subscribe((res) => {
+        //         this.resizeAssets();
+        //     });
+
         const streamInterval = 100;
+
         this.mousePositionStream
             .pipe(throttleTime(streamInterval))
             .subscribe((res) => {
@@ -142,7 +159,8 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
 
     private makeMenu(res: any) {
         const ratio = 4.04;
-        let menuContainerSize = [0, 0];
+        let menuContainerSize: number[];
+
         const setBlendingMode = (obj: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite }) => {
             obj.r.blendMode = PIXI.BLEND_MODES.ADD;
             obj.g.blendMode = PIXI.BLEND_MODES.ADD;
@@ -360,11 +378,6 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
             }
         });
         /* Load video from document tag */
-
-        /* Load video directly from resource */
-        // const videoTexture = PIXI.Texture.from(res.video.url);
-        console.log('videotex', this.videoTexture);
-        /* Load video directly from resource */
         this.videoGlitch = new GlitchFilter();
 
         this.backgroundSprite = new PIXI.Sprite(this.videoTexture);
@@ -432,5 +445,38 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
             this.backgroundSound.play();
             this.soundPlaying = true;
         }
+    }
+
+    private resizeAssets() {
+        const renderer = this.app.renderer;
+        renderer.resize(window.innerWidth - 1, window.innerHeight);
+        renderer.resize(
+            window.innerWidth ,
+            window.innerHeight
+        );
+
+        this.videoCont.width = window.innerWidth;
+        this.videoCont.height = window.innerHeight;
+        this.backgroundSprite.width = window.innerWidth;
+        this.backgroundSprite.height = window.innerHeight;
+
+        function position(obj: { r: PIXI.Sprite; b: PIXI.Sprite; g: PIXI.Sprite }, pos: number) {
+            const x = window.innerWidth / 4 * pos;
+            const y = window.innerHeight / 3;
+            obj.r.position.x = x;
+            obj.r.position.y = y;
+            obj.g.position.x = x;
+            obj.g.position.y = y;
+            obj.b.position.x = x;
+            obj.b.position.y = y;
+        }
+        position(this.lab, 1);
+        position(this.me, 2);
+        position(this.work, 3);
+        this.anchors = {
+            lab: {x: this.lab.r.position.x, y: this.lab.r.position.y},
+            me: {x: this.me.r.position.x, y: this.me.r.position.y},
+            work: {x: this.work.r.position.x, y: this.work.r.position.y},
+        };
     }
 }

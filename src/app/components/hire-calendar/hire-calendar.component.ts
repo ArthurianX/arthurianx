@@ -11,12 +11,12 @@ import {
 })
 
 export class HireCalendarComponent implements OnInit, OnDestroy {
+  public github = 'assets/svg/github.svg';
+  public linkedin = 'assets/svg/likdicon.svg';
 
-    constructor() {}
+  constructor() {}
 
-  public ngOnInit() {
-    console.log('animation logo');
-  }
+  public ngOnInit() {}
 
   public ngOnDestroy() {
 

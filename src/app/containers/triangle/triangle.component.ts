@@ -4,7 +4,7 @@ import GraphicsSVG from '../../services/pixi-svg/SVG';
 import { throttleTime } from 'rxjs/operators';
 import { TweenLite, TweenMax, TimelineLite, Power2 } from 'gsap';
 
-import { KawaseBlurFilter, AdjustmentFilter, CRTFilter, AdjustmentOptions, CRTOptions } from 'pixi-filters';
+import { KawaseBlurFilter, AdjustmentFilter, CRTFilter, AdjustmentOptions, CRTOptions, GlitchFilter, AsciiFilter } from 'pixi-filters';
 import PIXIGlowFilter from '../../pixi-filters/glow';
 import ParticleContainer = PIXI.ParticleContainer;
 import { Router } from '@angular/router';
@@ -21,6 +21,14 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
   @ViewChild('triangleBg', {static: true}) triangleBgRef: ElementRef;
   @ViewChild('triangle', {static: true}) triangleRef: ElementRef;
   @ViewChild('logoTriangle', {static: true}) triangleLogoRef: ElementRef;
+  @ViewChild('labVideo', {static: true}) labVideoRef: ElementRef;
+
+  public filesToLoad = [
+      ['triangle', 'assets/lab-scene/triangle.png'],
+      ['triangle_rev', 'assets/lab-scene/triangle-down.png'],
+      ['clouds', 'assets/lab-scene/clouds.mp4'],
+      ['wind', 'assets/lab-scene/wind.wav']
+  ];
   public triCoordGenerated: {x: number; y: number}[][] = [];
   public triangleSprites: any[] = [];
   private triangleCoordinates: any[] = [];
@@ -62,9 +70,10 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
     trailMode: true,
     drawingMode: false,
     staticAnimation: true,
-    stageFilters: true
+    stageFilters: false
   };
   public entryTriangle: PIXI.Sprite;
+  public soundPlaying = true;
   private app: PIXI.Application;
   private particlesContainer: PIXI.ParticleContainer;
   private tickerValue: number;
@@ -73,6 +82,10 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
     g?: PIXI.Sprite;
     b?: PIXI.Sprite;
   } = {};
+  private videoCont: PIXI.Container;
+  private backgroundSound: PIXI.sound.Sound;
+  private videoTexture: PIXI.Texture;
+  private backgroundSprite: PIXI.Sprite;
 
 
   constructor(
@@ -114,8 +127,9 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
     this.tickerStream.next(time);
   }
 
-  public loaderComplete(loader, res) {
+  public loaderComplete(res) {
     // NOTE: All the important things happen here.
+    this.addVideoBackground(res);
     this.calculateAddSprites(res);
     this.staticTriangleAnimations();
     this.startMouseEventStream(this.app);
@@ -147,20 +161,6 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
     // renderer.plugins.interaction.resolution = window.devicePixelRatio;
 
     this.app.stop();
-
-    if ((this.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
-      console.log('Atlas Parser not present');
-      this.loader.use(PIXI.spine.AtlasParser.use);
-    }
-
-    this.loader
-        .add('triangle', 'assets/story/triangle.png')
-        .add('triangle_rev', 'assets/story/triangle-down.png')
-        .add('triangle_logo', 'assets/triangle-logo.png')
-        .add('triangle_logo_r', 'assets/triangle-logo-r.png')
-        .add('triangle_logo_g', 'assets/triangle-logo-g.png')
-        .add('triangle_logo_b', 'assets/triangle-logo-b.png')
-        .load(this.loaderComplete.bind(this));
   }
 
   ngOnDestroy(): void {
@@ -168,6 +168,9 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
       this.loader.reset();
       this.app.stop();
       this.app.destroy(true, {children: true, texture: true});
+      this.backgroundSound.stop();
+      this.backgroundSound.destroy();
+      this.videoCont.destroy({children: true, baseTexture: true, texture: true});
     }, 700);
   }
 
@@ -308,13 +311,6 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
       this.entryTriangle.on('pointerdown', this.clickedEntryTriangle.bind(this));
     };
 
-    const drawLetterA = () => {
-
-      const coord = [{"x":612.5,"y":157.5},{"x":595,"y":157.5},{"x":630,"y":157.5},{"x":577.5,"y":227.5},{"x":612.5,"y":227.5},{"x":647.5,"y":227.5},{"x":560,"y":227.5},{"x":595,"y":227.5},{"x":630,"y":227.5},{"x":665,"y":227.5},{"x":542.5,"y":297.5},{"x":577.5,"y":297.5},{"x":647.5,"y":297.5},{"x":682.5,"y":297.5},{"x":525,"y":297.5},{"x":560,"y":297.5},{"x":665,"y":297.5},{"x":700,"y":297.5},{"x":507.5,"y":367.5},{"x":542.5,"y":367.5},{"x":682.5,"y":367.5},{"x":717.5,"y":367.5},{"x":490,"y":367.5},{"x":525,"y":367.5},{"x":700,"y":367.5},{"x":735,"y":367.5},{"x":472.5,"y":437.5},{"x":507.5,"y":437.5},{"x":717.5,"y":437.5},{"x":752.5,"y":437.5},{"x":455,"y":437.5},{"x":490,"y":437.5},{"x":735,"y":437.5},{"x":770,"y":437.5},{"x":437.5,"y":507.5},{"x":472.5,"y":507.5},{"x":752.5,"y":507.5},{"x":787.5,"y":507.5},{"x":420,"y":507.5},{"x":455,"y":507.5},{"x":770,"y":507.5},{"x":805,"y":507.5},{"x":402.5,"y":577.5},{"x":437.5,"y":577.5},{"x":787.5,"y":577.5},{"x":822.5,"y":577.5},{"x":385,"y":577.5},{"x":420,"y":577.5},{"x":805,"y":577.5},{"x":840,"y":577.5},{"x":367.5,"y":647.5},{"x":402.5,"y":647.5},{"x":822.5,"y":647.5},{"x":857.5,"y":647.5},{"x":350,"y":647.5},{"x":385,"y":647.5},{"x":420,"y":647.5},{"x":455,"y":647.5},{"x":490,"y":647.5},{"x":525,"y":647.5},{"x":560,"y":647.5},{"x":595,"y":647.5},{"x":630,"y":647.5},{"x":665,"y":647.5},{"x":700,"y":647.5},{"x":735,"y":647.5},{"x":840,"y":647.5},{"x":875,"y":647.5},{"x":612.5,"y":122.5},{"x":577.5,"y":192.5},{"x":612.5,"y":192.5},{"x":647.5,"y":192.5},{"x":595,"y":192.5},{"x":630,"y":192.5},{"x":542.5,"y":262.5},{"x":577.5,"y":262.5},{"x":647.5,"y":262.5},{"x":682.5,"y":262.5},{"x":560,"y":262.5},{"x":595,"y":262.5},{"x":630,"y":262.5},{"x":665,"y":262.5},{"x":507.5,"y":332.5},{"x":542.5,"y":332.5},{"x":682.5,"y":332.5},{"x":717.5,"y":332.5},{"x":525,"y":332.5},{"x":560,"y":332.5},{"x":665,"y":332.5},{"x":700,"y":332.5},{"x":472.5,"y":402.5},{"x":507.5,"y":402.5},{"x":717.5,"y":402.5},{"x":752.5,"y":402.5},{"x":490,"y":402.5},{"x":525,"y":402.5},{"x":700,"y":402.5},{"x":735,"y":402.5},{"x":437.5,"y":472.5},{"x":472.5,"y":472.5},{"x":752.5,"y":472.5},{"x":787.5,"y":472.5},{"x":455,"y":472.5},{"x":490,"y":472.5},{"x":735,"y":472.5},{"x":770,"y":472.5},{"x":402.5,"y":542.5},{"x":437.5,"y":542.5},{"x":787.5,"y":542.5},{"x":822.5,"y":542.5},{"x":420,"y":542.5},{"x":455,"y":542.5},{"x":770,"y":542.5},{"x":805,"y":542.5},{"x":367.5,"y":612.5},{"x":402.5,"y":612.5},{"x":822.5,"y":612.5},{"x":857.5,"y":612.5},{"x":385,"y":612.5},{"x":420,"y":612.5},{"x":805,"y":612.5},{"x":840,"y":612.5},{"x":332.5,"y":682.5},{"x":367.5,"y":682.5},{"x":402.5,"y":682.5},{"x":437.5,"y":682.5},{"x":472.5,"y":682.5},{"x":507.5,"y":682.5},{"x":542.5,"y":682.5},{"x":577.5,"y":682.5},{"x":612.5,"y":682.5},{"x":647.5,"y":682.5},{"x":682.5,"y":682.5},{"x":717.5,"y":682.5},{"x":752.5,"y":682.5},{"x":857.5,"y":682.5},{"x":892.5,"y":682.5},{"x":350,"y":682.5},{"x":385,"y":682.5},{"x":420,"y":682.5},{"x":455,"y":682.5},{"x":490,"y":682.5},{"x":525,"y":682.5},{"x":560,"y":682.5},{"x":595,"y":682.5},{"x":630,"y":682.5},{"x":665,"y":682.5},{"x":700,"y":682.5},{"x":735,"y":682.5},{"x":840,"y":682.5},{"x":875,"y":682.5}]
-      // These coordinates are for a letter a on a 1426 x 946 resolution = https://www.dropbox.com/s/o2aqic43d68jlxx/Screenshot%202019-06-26%2011.32.28.png?dl=0
-      // What to do with it next ^ ?
-    };
-
     const centerWave = () => {
       const rows = this.triangleCoordinates.length;
       const cols = this.triangleCoordinates[0].length;
@@ -348,12 +344,6 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
       showProgressingTriangle();
       // lightUpTheScreen();
       // centerWave();
-
-
-
-
-
-
 
     }, 3000);
   }
@@ -417,7 +407,7 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
   private clickedEntryTriangle() {
     console.log('entry triangle clicked', this.entryTriangle);
     this.animService.setCurrentAnimation(3);
-    this.router.navigate(['home']);
+    this.router.navigate(['']);
   }
 
   private randint(min, max): number {
@@ -433,40 +423,72 @@ export class TriangleComponent implements AfterViewInit, OnDestroy {
     app.stage.filters = [this.filters.adjustment, this.filters.crt];
   }
 
-  private addLogoTriangle(res) {
-    this.logoTriangle.r = PIXI.Sprite.from(res.triangle_logo_r.url);
-    this.logoTriangle.g = PIXI.Sprite.from(res.triangle_logo_b.url);
-    this.logoTriangle.b = PIXI.Sprite.from(res.triangle_logo_g.url);
+  private addVideoBackground(res: any) {
+    this.videoCont = new PIXI.Container();
+    this.labVideoRef.nativeElement.preload = 'auto';
+    this.labVideoRef.nativeElement.loop = true;              // enable looping
+    this.labVideoRef.nativeElement.src = res.clouds.url;
+    this.videoTexture = PIXI.Texture.from(this.labVideoRef.nativeElement, {
+      resourceOptions: {
+        autoLoad: true,
+        autoPlay: true,
+        updateFPS: 24
+      }
+    });
 
-    this.logoTriangle.r.blendMode = PIXI.BLEND_MODES.ADD;
-    this.logoTriangle.g.blendMode = PIXI.BLEND_MODES.ADD;
-    this.logoTriangle.b.blendMode = PIXI.BLEND_MODES.ADD;
+    this.backgroundSprite = new PIXI.Sprite(this.videoTexture);
+    this.backgroundSprite.width = this.app.screen.width;
+    this.backgroundSprite.height = this.app.screen.height;
+    const asciiF = new AsciiFilter(6);
+    const crtF = new CRTFilter(
+        {
+          curvature: 1,
+          lineWidth: 3,
+          lineContrast: 0.3,
+          verticalLine: 0,
+          noise: 0.2,
+          noiseSize: 1,
+          vignetting: 0.3,
+          vignettingAlpha: 0.7,
+          vignettingBlur: 0.3,
+          time: 0.5
+        } as CRTOptions
+    );
+    this.videoCont.addChild(this.backgroundSprite);
+    this.videoCont.filters = [
+      new AdjustmentFilter({
+        gamma: 0.8,
+        contrast: 1,
+        saturation: 1,
+        brightness: 1,
+        red: 1,
+        green: 1,
+        blue: 1,
+        alpha: 1
+      } as AdjustmentOptions),
+      crtF,
+      // asciiF
+    ];
 
-    this.logoTriangle.r.scale.x = 0.4;
-    this.logoTriangle.r.scale.y = 0.4;
-    this.logoTriangle.g.scale.x = 0.4;
-    this.logoTriangle.g.scale.y = 0.4;
-    this.logoTriangle.b.scale.x = 0.4;
-    this.logoTriangle.b.scale.y = 0.4;
+    /* SOUND */
+    this.backgroundSound = PIXI.sound.Sound.from({
+      url: res.wind.url,
+      autoPlay: this.soundPlaying,
+      complete: () => {
+        this.backgroundSound.play();
+      }
+    });
 
-    // console.log(this.logoTriangle)
+    this.app.stage.addChild(this.videoCont);
+  }
 
-    const position = {
-      x: window.innerWidth,
-      y: window.innerHeight
-    };
-    // this.logoTriangle.r.position.x = position.x;
-    // this.logoTriangle.r.position.y = position.y;
-    // this.logoTriangle.g.position.x = position.x;
-    // this.logoTriangle.g.position.y = position.y;
-    // this.logoTriangle.b.position.x = position.x;
-    // this.logoTriangle.b.position.y = position.y;
-
-    TweenMax.to(this.logoTriangle.r.position, 0.5, {x: this.randint(1, 50), y: this.randint(1, 50), repeat: -1}).yoyo();
-    TweenMax.to(this.logoTriangle.g.position, 0.5, {x: this.randint(1, 50), y: this.randint(1, 50), repeat: -1}).yoyo();
-    TweenMax.to(this.logoTriangle.b.position, 0.5, {x: this.randint(1, 0), y: this.randint(1, 50), repeat: -1}).yoyo();
-
-    this.app.stage.addChild(this.logoTriangle.r, this.logoTriangle.b, this.logoTriangle.g);
-
+  volumeToggle(b: boolean) {
+    if (!b) {
+      this.backgroundSound.stop();
+      this.soundPlaying = false;
+    } else {
+      this.backgroundSound.play();
+      this.soundPlaying = true;
+    }
   }
 }

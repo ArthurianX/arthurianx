@@ -37,7 +37,6 @@ export class AssetLoaderComponent implements OnInit, OnDestroy {
 
   public ngOnInit(): void {
     this.fileList.map( (file) => {
-      console.log('loader add', file[0], file[1]);
       this.loader.add(file[0], file[1]);
     });
   }
@@ -49,7 +48,6 @@ export class AssetLoaderComponent implements OnInit, OnDestroy {
 
   public startLoading() {
     if ((this.loader as any)._afterMiddleware.indexOf(PIXI.spine.AtlasParser.use) < 0) {
-      console.log('Atlas Parser not present');
       this.loader.use(PIXI.spine.AtlasParser.use);
     }
 
@@ -71,7 +69,6 @@ export class AssetLoaderComponent implements OnInit, OnDestroy {
   public handleAnimation(anim: any) {
     this.anim = anim;
     this.anim.addEventListener('complete', (ev) => {
-      console.log('complete');
       this.loadingFinished = true;
       // Init destruction
     });
