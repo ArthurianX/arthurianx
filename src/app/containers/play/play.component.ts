@@ -23,6 +23,8 @@ export class PlayComponent implements OnInit {
         ['ground', 'assets/story/soil/soil-tile.png']
     ];
     @ViewChild('noiseBackground', {static: true}) noiseBackgroundRef: ElementRef;
+    file: any;
+    spriteIndex: any;
 
     constructor() {
     }
@@ -76,5 +78,17 @@ export class PlayComponent implements OnInit {
 
     loaderDone($event: any[]) {
         console.log('loader done', $event);
+    }
+
+    receiveTicker($event) {
+
+    }
+
+    buttonClicked(home: string) {
+
+    }
+
+    receiveSpriteInstance($event) {
+
     }
 }

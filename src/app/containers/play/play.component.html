@@ -1,4 +1,34 @@
 <div>
   <canvas #noiseBackground id="noiseBackground"></canvas>
   <asset-loader [fileList]="filesToLoad" (loadingComplete)="loaderDone($event)"></asset-loader>
+  <!-- Creates / Loads the app -->
+  <!--<pixi-app
+          [fullSize]="true"
+          [height]="400"
+          [width]="500"
+          [devicePixeRatioEnabled]="true"
+          (outsideTicker)="receiveTicker($event)"
+  >
+    &lt;!&ndash; Everything is hidden until the loader finishes &ndash;&gt;
+    <pixi-loader
+            [fileList]="[['asset', '/assets/myphoto.png']]"
+            [animation]="1"
+            [loadingImage]="'assets/photo/myloading.gif'"
+    ></pixi-loader>
+
+    &lt;!&ndash; Normal PIXI Sprite, can be a button or anything &ndash;&gt;
+    <pixi-sprite
+            [loadedAsset]="file[0][1] || 'myphoto'"
+            [asset]="file[0][1] || 'myphoto'"
+            [interactive]="true"
+            (spriteClicked)="buttonClicked('home')"
+            [textSettings]="{}"
+            [positionSettings]="{ //Position can be tied to ticker etc }"
+            [hoverSettings]="{}"
+            (spriteInstance)="receiveSpriteInstance($event // For full control)"
+            [filters]="[]"
+            [zIndex]="spriteIndex.background"
+    >&lt;!&ndash; ^ TODO: Still a lot of stuff &ndash;&gt;</pixi-sprite>
+
+  </pixi-app>-->
 </div>

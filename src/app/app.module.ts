@@ -26,6 +26,7 @@ import { AnimationControllerService } from './services/animation.controller.serv
 import { HomeSceneComponent } from './components/home-scene/home-scene.component';
 import { MatButtonModule, MatIconModule, MatRippleModule } from '@angular/material';
 import { HireCalendarComponent } from './components/hire-calendar/hire-calendar.component';
+import { PixiModule } from '../../projects/ngxpixi/src/public-api';
 
 // @ts-ignore
 @NgModule({
@@ -57,7 +58,11 @@ import { HireCalendarComponent } from './components/hire-calendar/hire-calendar.
     FlexLayoutModule,
     MatIconModule,
     MatButtonModule,
-    MatRippleModule
+    MatRippleModule,
+    PixiModule.forRoot({
+      sound: true,
+      filters: false
+    })
   ],
   providers: [
     AnimationControllerService
