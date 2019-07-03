@@ -424,6 +424,7 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
                 this.backgroundSound.play();
             }
         });
+        this.backgroundSound.volume = 0.5;
 
         this.brokenSound = PIXI.sound.Sound.from({
             url: res.broken_sound.url,

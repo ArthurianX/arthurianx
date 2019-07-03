@@ -79,7 +79,7 @@ export class AssetLoaderComponent implements OnInit, OnDestroy {
     // 16 is 100%
     // x is percent param
     this.anim.goToAndStop(Math.ceil((120 * percent) / 100), true);
-    if (percent === 100) {
+    if (percent > 98) {
       // Play until the end
       this.anim.play();
     }
