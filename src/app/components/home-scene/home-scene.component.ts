@@ -18,7 +18,6 @@ export class HomeSceneComponent implements AfterViewInit, OnDestroy {
     @ViewChild('homeScene', {static: true}) homeSceneRef: ElementRef;
     @ViewChild('homeVideo', {static: true}) homeVideoRef: ElementRef;
     public filesToLoad = [
-        ['nature', 'assets/home-scene/nature.jpg'],
         ['sound', 'assets/home-scene/spring-meadow.wav'],
         ['broken_sound', 'assets/home-scene/loop_neonlight_buzz_03.ogg'],
         ['video', 'assets/home-scene/grass.mp4'],
