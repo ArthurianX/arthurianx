@@ -1,4 +1,4 @@
-👋
+👋 Hi there!
 
 
 ![ArthurianX's GitHub stats](https://github-readme-stats.vercel.app/api/?username=ArthurianX&show_icons=true&count_private=true&theme=vue)
@@ -7,7 +7,7 @@
 - Series A/B startup
 - Revenue, if not profit
 - At least 1 year runway
-- Cloud Platform / Web 3 / Automation, the more environmentally / socially responsible the better
+- Cloud Platform / Web3 / Automation, the more environmentally / socially responsible the better
 - [ShapeUp](https://basecamp.com/shapeup) product development
 - 120.000+ USD/yr
 - Lot of responsbility, lots of stock, normal vesting period, possibly hardware
@@ -21,3 +21,5 @@
 - Team player
 
 My immediate value is in working with React-Native, React, Angular + TypeScript + all the popular libraries attached to them.
+
+Feel free to contact me on [LinkedIn](https://www.linkedin.com/in/arthurianx/) or on my [bio page, arthur.kovacs.is](https://arthur.kovacs.is)
