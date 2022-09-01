@@ -9,7 +9,6 @@
 - At least 1 year runway
 - Cloud Platform / Web3 / Automation, the more environmentally / socially responsible the better
 - [ShapeUp](https://basecamp.com/shapeup) product development
-- 150.000+ USD/yr
 - Lot of responsbility, lots of stock, normal vesting period, possibly hardware
 
 👷‍♂️ What value do I bring to the table:
