@@ -1,9 +1,3 @@
-Here’s a sharper, more current version. Cleaner positioning, leadership signal, AI angle, and corrected experience.
-
-You can paste this directly into your README.
-
----
-
 👋 Hi there!
 
 ![ArthurianX's GitHub stats](https://github-readme-stats.vercel.app/api/?username=ArthurianX\&show_icons=true\&count_private=true\&theme=vue)
