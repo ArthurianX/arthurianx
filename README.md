@@ -1,24 +1,63 @@
+Here’s a sharper, more current version. Cleaner positioning, leadership signal, AI angle, and corrected experience.
+
+You can paste this directly into your README.
+
+---
+
 👋 Hi there!
 
+![ArthurianX's GitHub stats](https://github-readme-stats.vercel.app/api/?username=ArthurianX\&show_icons=true\&count_private=true\&theme=vue)
 
-![ArthurianX's GitHub stats](https://github-readme-stats.vercel.app/api/?username=ArthurianX&show_icons=true&count_private=true&theme=vue)
+🔭 Currently exploring my next role. My ideal environment:
 
-🔭 I’m currently looking for work, my preferable unicorn could be:
-- Series A/B startup
-- Revenue, if not profit
-- At least 1 year runway
-- Cloud Platform / Web3 / Automation, the more environmentally / socially responsible the better
-- [ShapeUp](https://basecamp.com/shapeup) product development
-- Lot of responsbility, lots of stock, normal vesting period, possibly hardware
+* Series A/B startup
+* Real revenue (profit is a bonus)
+* ≥ 12 months runway
+* Cloud platform / AI / Web3 / Automation
+* Products with meaningful environmental or social impact
+* Shape-driven product culture (Shape Up or similar)
+* High ownership, meaningful equity, long-term thinking
+* Interest in hardware or infra-adjacent products is a plus
 
-👷‍♂️ What value do I bring to the table:
-- 15 years of experience in web development
-- Broad knowledge about *a lot* of aspects of a product's lifecycle
-- Main focus on frontend and mobile (code > pipeline > store), but really friendly with backend and DEVOPS as well
-- Extensive experience with various tools, libraries, security, automation, external integrations
-- Relentless problem solver
-- Team player
+---
 
-My immediate value is in working with React-Native, React, Angular + TypeScript + all the popular libraries attached to them.
+👷‍♂️ What I bring:
 
-Feel free to contact me on [LinkedIn](https://www.linkedin.com/in/arthurianx/) or on my [bio page, arthur.kovacs.is](https://arthur.kovacs.is)
+* **20 years in software engineering**, from IC to engineering leadership
+* **Frontend Engineering Manager experience** leading large teams and scaling delivery
+* Deep understanding of the **full product lifecycle** (idea → architecture → CI/CD → production → scale)
+* Strong frontend foundation, with solid backend and infrastructure fluency
+* Proven track record in **execution, team performance, and technical strategy**
+* Builder mindset: automation-first, systems thinking, pragmatic decisions
+* Comfortable operating in ambiguity and high-ownership environments
+
+---
+
+🧠 Current technical focus:
+
+* Frontend architecture at scale (React, React Native, Angular, TypeScript ecosystem)
+* Developer productivity, CI/CD systems, engineering workflows
+* **LLM-driven tooling and Local AI infrastructure**
+
+  * self-hosted models
+  * agent orchestration
+  * AI-assisted engineering systems
+  * cost-efficient inference infra
+* Backend exploration (Rust, systems-level thinking, automation platforms)
+
+---
+
+⚡ Immediate hands-on value:
+
+* React Native / React / Angular ecosystems
+* TypeScript-first architectures
+* Engineering platform improvements
+* AI-augmented developer tooling
+* Product delivery acceleration
+
+---
+
+📬 Reach out:
+
+* LinkedIn: [https://www.linkedin.com/in/arthurianx/](https://www.linkedin.com/in/arthurianx/)
+* Personal site: [https://arthur.kovacs.is](https://arthur.kovacs.is)
